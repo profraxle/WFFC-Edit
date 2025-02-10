@@ -2,7 +2,7 @@
 #include "resource.h"
 #include <vector>
 #include <sstream>
-
+#include "Mouse.h"
 //
 //ToolMain Class
 ToolMain::ToolMain()
@@ -40,6 +40,7 @@ void ToolMain::onActionInitialise(HWND handle, int width, int height)
 	m_width		= width;
 	m_height	= height;
 	
+
 	m_d3dRenderer.Initialize(handle, m_width, m_height);
 
 	//database connection establish
@@ -291,7 +292,7 @@ void ToolMain::Tick(MSG *msg)
 	m_d3dRenderer.Tick(&m_toolInputCommands);
 }
 
-void ToolMain::UpdateInput(MSG * msg)
+void ToolMain::UpdateInput(MSG* msg)
 {
 
 	switch (msg->message)
@@ -306,10 +307,25 @@ void ToolMain::UpdateInput(MSG * msg)
 		break;
 
 	case WM_MOUSEMOVE:
+		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
+		
 		break;
 
 	case WM_LBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
 		//set some flag for the mouse button in inputcommands
+		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
+		break;
+	case WM_RBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
+		//set some flag for the mouse button in inputcommands
+		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
+		break;
+	case WM_LBUTTONUP:	//mouse button down,  you will probably need to check when its up too
+		//set some flag for the mouse button in inputcommands
+		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
+		break;
+	case WM_RBUTTONUP:	//mouse button down,  you will probably need to check when its up too
+		//set some flag for the mouse button in inputcommands
+		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
 		break;
 
 	}
@@ -320,7 +336,7 @@ void ToolMain::UpdateInput(MSG * msg)
 		m_toolInputCommands.forward = true;
 	}
 	else m_toolInputCommands.forward = false;
-	
+
 	if (m_keyArray['S'])
 	{
 		m_toolInputCommands.back = true;
@@ -338,16 +354,5 @@ void ToolMain::UpdateInput(MSG * msg)
 	}
 	else m_toolInputCommands.right = false;
 	//rotation
-	if (m_keyArray['E'])
-	{
-		m_toolInputCommands.rotRight = true;
-	}
-	else m_toolInputCommands.rotRight = false;
-	if (m_keyArray['Q'])
-	{
-		m_toolInputCommands.rotLeft = true;
-	}
-	else m_toolInputCommands.rotLeft = false;
 
-	//WASD
 }

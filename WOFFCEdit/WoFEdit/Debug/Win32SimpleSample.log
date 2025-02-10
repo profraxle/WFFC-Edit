@@ -1,0 +1,14 @@
+﻿  Game.cpp
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(28,16): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(154,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(154,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(159,45): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(159,31): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(171,64): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(172,28): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(173,66): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(279,57): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(278,57): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(277,97): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Game.cpp(263,10): warning C4101: 'Buffer': unreferenced local variable
+  Win32SimpleSample.vcxproj -> C:\Users\2100629\OneDrive - Abertay University\Documents\GitHub\WFFC-Edit\WOFFCEdit\Debug\WoFEdit.exe

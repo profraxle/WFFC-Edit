@@ -72,6 +72,10 @@ private:
 	//functionality
 	float								m_movespeed;
 
+	//mouse state
+	DirectX::Mouse::State				mouseState;
+	DirectX::SimpleMath::Vector2		mousePos;
+
 	//camera
 	DirectX::SimpleMath::Vector3		m_camPosition;
 	DirectX::SimpleMath::Vector3		m_camOrientation;

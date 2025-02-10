@@ -6,6 +6,6 @@ struct InputCommands
 	bool back;
 	bool right;
 	bool left;
-	bool rotRight;
-	bool rotLeft;
+	bool leftClick;
+	bool rightClick;
 };

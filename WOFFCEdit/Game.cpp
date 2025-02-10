@@ -145,18 +145,32 @@ void Game::Update(DX::StepTimer const& timer)
 	Vector3 planarMotionVector = m_camLookDirection;
 	planarMotionVector.y = 0.0;
 
-	if (m_InputCommands.rotRight)
+	 mouseState = m_mouse->GetState();
+
+
+
+	if (mouseState.rightButton) 
 	{
-		m_camOrientation.y -= m_camRotRate;
+		Vector2 diff = mousePos - Vector2(mouseState.x, mouseState.y);
+		
+		m_camOrientation.y -= diff.x;
+		m_camOrientation.x += diff.y;
 	}
-	if (m_InputCommands.rotLeft)
+	mousePos = Vector2(mouseState.x, mouseState.y);
+
+	if (m_camOrientation.x >= 90)
 	{
-		m_camOrientation.y += m_camRotRate;
+		m_camOrientation.x = 90;
+	}
+	else if (m_camOrientation.x <= -90) {
+		m_camOrientation.x = -90;
 	}
 
+
 	//create look direction from Euler angles in m_camOrientation
-	m_camLookDirection.x = sin((m_camOrientation.y)*3.1415 / 180);
-	m_camLookDirection.z = cos((m_camOrientation.y)*3.1415 / 180);
+	m_camLookDirection.x = cos((m_camOrientation.y)*3.1415 / 180) * cos((m_camOrientation.x) * 3.1415 / 180);
+	m_camLookDirection.y = sin((m_camOrientation.x)*3.1415 / 180);
+	m_camLookDirection.z = sin((m_camOrientation.y) * 3.1415 / 180) * cos((m_camOrientation.x) * 3.1415 / 180);
 	m_camLookDirection.Normalize();
 
 	//create right vector from look Direction
@@ -179,6 +193,8 @@ void Game::Update(DX::StepTimer const& timer)
 	{
 		m_camPosition -= m_camRight*m_movespeed;
 	}
+
+
 
 	//update lookat point
 	m_camLookAt = m_camPosition + m_camLookDirection;
@@ -245,7 +261,7 @@ void Game::Render()
 	//CAMERA POSITION ON HUD
 	m_sprites->Begin();
 	WCHAR   Buffer[256];
-	std::wstring var = L"Cam X: " + std::to_wstring(m_camPosition.x) + L"Cam Z: " + std::to_wstring(m_camPosition.z);
+	std::wstring var = L"Cam X: " + std::to_wstring(mouseState.x) + L"Cam Z: " + std::to_wstring(mouseState.y);
 	m_font->DrawString(m_sprites.get(), var.c_str() , XMFLOAT2(100, 10), Colors::Yellow);
 	m_sprites->End();
 
