@@ -84,6 +84,8 @@ void Game::Initialize(HWND window, int width, int height)
     m_deviceResources->CreateWindowSizeDependentResources();
     CreateWindowSizeDependentResources();
 
+	GetClientRect(window, &m_ScreenDimensions);
+
 #ifdef DXTK_AUDIO
     // Create DirectXTK for Audio objects
     AUDIO_ENGINE_FLAGS eflags = AudioEngine_Default;
@@ -613,6 +615,68 @@ void Game::OnDeviceRestored()
 
     CreateWindowSizeDependentResources();
 }
+
+int Game::MousePicking() {
+	int selectedID = -1;
+	float pickedDistance = 0;
+
+	float minDistance = 9999999;
+
+	//setup near and far planes with mouse x and y
+	const XMVECTOR nearSource = XMVectorSet(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, 0.f, 1.f);
+	const XMVECTOR farSource = XMVectorSet(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, 1.f, 1.f);
+
+	//loop through displayed objects and pick with each
+	for (int i = 0; i < m_displayList.size();i++) {
+
+		const XMVECTORF32 scale = { m_displayList[i].m_scale.x,
+		m_displayList[i].m_scale.y,m_displayList[i].m_scale.z };
+		const XMVECTORF32 translate = { m_displayList[i].m_position.x,
+		m_displayList[i].m_position.y,m_displayList[i].m_position.z };
+
+
+
+		XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(
+			m_displayList[i].m_orientation.y * 3.1415 / 180,
+			m_displayList[i].m_orientation.x * 3.1415 / 180,
+			m_displayList[i].m_orientation.z * 3.1415 / 180
+		);
+
+		//create set matrix of selected object in the world based on translation scale and rotation
+		XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
+
+		//unproject the points on near and far plane
+		XMVECTOR nearPoint = XMVector3Unproject(nearSource, 0.f, 0.f,
+			m_ScreenDimensions.right, m_ScreenDimensions.bottom,
+			m_deviceResources->GetScreenViewport().MinDepth,
+			m_deviceResources->GetScreenViewport().MaxDepth, m_projection, m_view, local);
+
+		XMVECTOR farPoint = XMVector3Unproject(farSource, 0.f, 0.f,
+			m_ScreenDimensions.right, m_ScreenDimensions.bottom,
+			m_deviceResources->GetScreenViewport().MinDepth,
+			m_deviceResources->GetScreenViewport().MaxDepth, m_projection, m_view, local);
+
+		XMVECTOR pickingVector = farPoint - nearPoint;
+		pickingVector = XMVector3Normalize(pickingVector);
+
+		for (int y = 0; y < m_displayList[i].m_model.get()->meshes.size();y++) {
+			if (m_displayList[i].m_model.get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
+					
+				if (pickedDistance < minDistance) {
+					selectedID = i;
+				}
+
+
+			}
+		}
+
+	}
+
+
+	return selectedID;
+}
+
+
 #pragma endregion
 
 std::wstring StringToWCHART(std::string s)

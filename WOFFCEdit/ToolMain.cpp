@@ -18,7 +18,10 @@ ToolMain::ToolMain()
 	m_toolInputCommands.back		= false;
 	m_toolInputCommands.left		= false;
 	m_toolInputCommands.right		= false;
-	
+
+	m_toolInputCommands.mouse_LB_Down = false;
+	m_toolInputCommands.mouse_X = 0;
+	m_toolInputCommands.mouse_Y = 0;
 }
 
 
@@ -290,6 +293,22 @@ void ToolMain::Tick(MSG *msg)
 
 	//Renderer Update Call
 	m_d3dRenderer.Tick(&m_toolInputCommands);
+
+	if (m_toolInputCommands.mouse_LB_Down) {
+
+
+		//store the selected object temporarily
+		int tempSelect = m_d3dRenderer.MousePicking();
+
+		//if a different object is selected, update ID or deselect if same
+		if (tempSelect == m_selectedObject) {
+			m_selectedObject = -1;
+		}
+		else {
+			m_selectedObject = tempSelect;
+		}
+		m_toolInputCommands.mouse_LB_Down = false;
+	}
 }
 
 void ToolMain::UpdateInput(MSG* msg)
@@ -308,12 +327,14 @@ void ToolMain::UpdateInput(MSG* msg)
 
 	case WM_MOUSEMOVE:
 		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
-		
+		m_toolInputCommands.mouse_X = GET_X_LPARAM(msg->lParam);
+		m_toolInputCommands.mouse_Y = GET_Y_LPARAM(msg->lParam);
 		break;
 
 	case WM_LBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
 		//set some flag for the mouse button in inputcommands
 		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
+		m_toolInputCommands.mouse_LB_Down = true;
 		break;
 	case WM_RBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
 		//set some flag for the mouse button in inputcommands
