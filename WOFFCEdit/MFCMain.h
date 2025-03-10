@@ -9,6 +9,7 @@
 #include "resource.h"
 #include "MFCFrame.h"
 #include "SelectDialogue.h"
+#include "UndoRedoDialogue.h"
 
 
 class MFCMain : public CWinApp 
@@ -27,6 +28,8 @@ private:
 	CRect WindowRECT;	//Window area rectangle. 
 	SelectDialogue m_ToolSelectDialogue;			//for modeless dialogue, declare it here
 
+	UndoRedoDialogue m_ToolUndoRedoDialogue;
+
 	int m_width;		
 	int m_height;
 	
@@ -34,7 +37,9 @@ private:
 	afx_msg void MenuFileQuit();
 	afx_msg void MenuFileSaveTerrain();
 	afx_msg void MenuEditSelect();
+	afx_msg void MenuEditUndoRedo();
 	afx_msg	void ToolBarButton1();
+	afx_msg void ToolBarButton2();
 
 
 	DECLARE_MESSAGE_MAP()	// required macro for message map functionality  One per class

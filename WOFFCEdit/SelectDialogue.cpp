@@ -51,7 +51,7 @@ void SelectDialogue::SetObjectData(std::vector<SceneObject>* SceneGraph, int * s
 void SelectDialogue::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_LIST1, m_listBox);
+	DDX_Control(pDX, IDC_ACTIONLIST, m_listBox);
 }
 
 void SelectDialogue::End()
