@@ -22,6 +22,7 @@ ToolMain::ToolMain()
 	m_toolInputCommands.mouse_LB_Down = false;
 	m_toolInputCommands.mouse_X = 0;
 	m_toolInputCommands.mouse_Y = 0;
+
 }
 
 
@@ -309,6 +310,31 @@ void ToolMain::Tick(MSG *msg)
 		}
 		m_toolInputCommands.mouse_LB_Down = false;
 	}
+
+	if (m_toolInputCommands.copy) {
+
+		if (m_selectedObject != -1) {
+			copyObject = m_sceneGraph[m_selectedObject];
+		}
+	}
+	if (m_toolInputCommands.paste && pasteTrigger) 
+	{
+			SceneObject newObj = copyObject;
+			newObj.posY += 1;
+			newObj.ID = m_sceneGraph.size()+1;
+
+			UpdateHistory();
+
+			m_sceneGraph.push_back(newObj);
+			m_toolInputCommands.paste = false;
+
+			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
+			pasteTrigger = false;
+	}
+}
+
+void ToolMain::UpdateHistory() {
+	history.push(m_sceneGraph);
 }
 
 void ToolMain::UpdateInput(MSG* msg)
@@ -374,6 +400,39 @@ void ToolMain::UpdateInput(MSG* msg)
 		m_toolInputCommands.right = true;
 	}
 	else m_toolInputCommands.right = false;
+
+	if (m_keyArray[17]) {
+		m_toolInputCommands.control= true;
+	}else  m_toolInputCommands.control = false;
+
+	if (m_keyArray['C'] && m_toolInputCommands.control) {
+		m_toolInputCommands.copy = true;
+	}
+	else m_toolInputCommands.copy = false;
+
+	if (m_keyArray['V'] && m_toolInputCommands.control) {
+		m_toolInputCommands.paste = true;
+	}
+	else {
+		m_toolInputCommands.paste = false;
+		pasteTrigger = true;
+	}
+
+	if (m_keyArray['Z'] && m_toolInputCommands.control) {
+		m_toolInputCommands.undo = true;
+	}
+	else {
+		m_toolInputCommands.undo = false;
+		undoTrigger = true;
+	}
+
+	if (m_keyArray['Y'] && m_toolInputCommands.control) {
+		m_toolInputCommands.redo = true;
+	}
+	else {
+		m_toolInputCommands.redo = false;
+	
+	}
 	//rotation
 
 }

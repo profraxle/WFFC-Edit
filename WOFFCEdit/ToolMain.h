@@ -7,6 +7,7 @@
 #include "SceneObject.h"
 #include "InputCommands.h"
 #include <vector>
+#include <stack>
 
 
 class ToolMain
@@ -26,10 +27,18 @@ public: //methods
 	void	Tick(MSG *msg);
 	void	UpdateInput(MSG *msg);
 
+
 public:	//variables
 	std::vector<SceneObject>    m_sceneGraph;	//our scenegraph storing all the objects in the current chunk
 	ChunkObject					m_chunk;		//our landscape chunk
 	int m_selectedObject;						//ID of current Selection
+
+	SceneObject copyObject;
+
+	bool pasteTrigger, undoTrigger;
+
+	std::stack < std::vector<SceneObject>> history;
+	void UpdateHistory();
 
 private:	//methods
 	void	onContentAdded();

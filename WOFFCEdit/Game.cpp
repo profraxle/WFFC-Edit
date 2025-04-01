@@ -198,6 +198,7 @@ void Game::Update(DX::StepTimer const& timer)
 
 
 
+
 	//update lookat point
 	m_camLookAt = m_camPosition + m_camLookDirection;
 
@@ -266,6 +267,7 @@ void Game::Render()
 	std::wstring var = L"Cam X: " + std::to_wstring(mouseState.x) + L"Cam Z: " + std::to_wstring(mouseState.y);
 	m_font->DrawString(m_sprites.get(), var.c_str() , XMFLOAT2(100, 10), Colors::Yellow);
 	m_sprites->End();
+
 
 	//RENDER OBJECTS FROM SCENEGRAPH
 	int numRenderObjects = m_displayList.size();
@@ -484,6 +486,8 @@ void Game::BuildDisplayList(std::vector<SceneObject> * SceneGraph)
 		
 		
 }
+
+
 
 void Game::BuildDisplayChunk(ChunkObject * SceneChunk)
 {
