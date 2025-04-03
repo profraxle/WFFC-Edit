@@ -147,6 +147,7 @@ void ToolMain::onActionLoad()
 		newSceneObject.light_linear = sqlite3_column_double(pResults, 54);
 		newSceneObject.light_quadratic = sqlite3_column_double(pResults, 55);
 	
+		registeredIDs.push_back(newSceneObject.ID);
 
 		//send completed object to scenegraph
 		m_sceneGraph.push_back(newSceneObject);
@@ -321,9 +322,23 @@ void ToolMain::Tick(MSG *msg)
 	{
 			SceneObject newObj = copyObject;
 			newObj.posY += 1;
-			newObj.ID = m_sceneGraph.size()+1;
+
+			int IDtry = 0;
+			bool IDfound = false;
+
+			while (!IDfound) {
+				if (std::find(registeredIDs.begin(), registeredIDs.end(), IDtry) != registeredIDs.end()){
+					++IDtry;
+				}
+				else {
+					IDfound = true;
+				}
+
+			}
+			newObj.ID = IDtry;
 
 			UpdateHistory();
+			futureHistory = std::stack<std::vector<SceneObject>>();
 
 			m_sceneGraph.push_back(newObj);
 			m_toolInputCommands.paste = false;
@@ -331,10 +346,44 @@ void ToolMain::Tick(MSG *msg)
 			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
 			pasteTrigger = false;
 	}
+	if (m_toolInputCommands.undo && undoTrigger) {
+		if (!history.empty()) {
+			UpdateFutureHistory();
+			m_sceneGraph = history.top();
+			history.pop();
+
+			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
+			undoTrigger = false;
+		}
+	}
+	if (m_toolInputCommands.redo && redoTrigger) {
+		if (!futureHistory.empty()) {
+			UpdateHistory();
+			m_sceneGraph = futureHistory.top();
+			futureHistory.pop();
+
+			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
+			redoTrigger = false;
+		}
+	}
+
+	if (m_toolInputCommands.deleteObject) {
+		if (m_selectedObject != -1) {
+			UpdateHistory();
+			futureHistory = std::stack<std::vector<SceneObject>>();
+			m_sceneGraph.erase(m_sceneGraph.begin() + m_selectedObject);
+			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
+			m_selectedObject = -1;
+		}
+	}
 }
 
 void ToolMain::UpdateHistory() {
 	history.push(m_sceneGraph);
+}
+
+void ToolMain::UpdateFutureHistory() {
+	futureHistory.push(m_sceneGraph);
 }
 
 void ToolMain::UpdateInput(MSG* msg)
@@ -431,7 +480,14 @@ void ToolMain::UpdateInput(MSG* msg)
 	}
 	else {
 		m_toolInputCommands.redo = false;
-	
+		redoTrigger = true;
+	}
+
+	if (m_keyArray[46]) {
+		m_toolInputCommands.deleteObject = true;
+	}
+	else {
+		m_toolInputCommands.deleteObject = false;
 	}
 	//rotation
 

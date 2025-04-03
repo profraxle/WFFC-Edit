@@ -9,7 +9,6 @@
 #include <vector>
 #include <stack>
 
-
 class ToolMain
 {
 public: //methods
@@ -33,12 +32,17 @@ public:	//variables
 	ChunkObject					m_chunk;		//our landscape chunk
 	int m_selectedObject;						//ID of current Selection
 
+	std::vector<int> registeredIDs;
+
 	SceneObject copyObject;
 
-	bool pasteTrigger, undoTrigger;
+	bool pasteTrigger, undoTrigger,redoTrigger;
 
 	std::stack < std::vector<SceneObject>> history;
 	void UpdateHistory();
+
+	std::stack<std::vector<SceneObject>> futureHistory;
+	void UpdateFutureHistory();
 
 private:	//methods
 	void	onContentAdded();

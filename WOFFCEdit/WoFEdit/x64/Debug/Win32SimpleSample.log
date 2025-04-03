@@ -53,7 +53,6 @@ C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(145,5
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(146,56): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(147,54): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(148,57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(208,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(324,35): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(209,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   Generating Code...
   Win32SimpleSample.vcxproj -> C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\x64\Debug\WoFEdit.exe
