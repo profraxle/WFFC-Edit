@@ -1,43 +1,4 @@
-﻿  DisplayChunk.cpp
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(14,27): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(15,49): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(73,36): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(74,185): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(74,81): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(94,10): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(152,10): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(174,36): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(189,30): warning C4101: 'index4': unreferenced local variable
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(189,14): warning C4101: 'index2': unreferenced local variable
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(189,22): warning C4101: 'index3': unreferenced local variable
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp(189,6): warning C4101: 'index1': unreferenced local variable
-  Game.cpp
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(28,16): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(156,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(156,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(161,45): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(161,31): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(173,64): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(174,28): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(175,66): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(273,23): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(283,57): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(282,57): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(281,97): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(266,10): warning C4101: 'Buffer': unreferenced local variable
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(419,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(630,82): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(630,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(631,81): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(631,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(646,46): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(645,46): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(644,46): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(654,48): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(654,22): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(659,48): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp(659,22): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
-  MFCFrame.cpp
+﻿  MFCFrame.cpp
   _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\resource.h(23,9): warning C4005: 'ID_EDIT_UNDO': macro redefinition
   (compiling source file 'MFCFrame.cpp')
