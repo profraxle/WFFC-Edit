@@ -304,12 +304,21 @@ void ToolMain::Tick(MSG *msg)
 
 		//if a different object is selected, update ID or deselect if same
 		if (tempSelect == m_selectedObject) {
-			m_selectedObject = -1;
+
+			int gizmoInteract = m_d3dRenderer.MouseInteractGizmo();
+
+			if (gizmoInteract != -1) {
+				
+			}
+			else {
+				m_selectedObject = -1;
+			}
 		}
 		else {
 			m_selectedObject = tempSelect;
 		}
 		m_toolInputCommands.mouse_LB_Down = false;
+		m_d3dRenderer.SetSelectedIndex(m_selectedObject);
 	}
 
 	if (m_toolInputCommands.copy) {

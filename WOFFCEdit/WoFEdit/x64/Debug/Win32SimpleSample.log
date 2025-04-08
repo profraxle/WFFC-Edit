@@ -1,25 +1,4 @@
-﻿  MFCFrame.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\resource.h(23,9): warning C4005: 'ID_EDIT_UNDO': macro redefinition
-  (compiling source file 'MFCFrame.cpp')
-      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.43.34808\atlmfc\include\afxres.h(264,9):
-      see previous definition of 'ID_EDIT_UNDO'
-  
-  MFCMain.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\resource.h(23,9): warning C4005: 'ID_EDIT_UNDO': macro redefinition
-  (compiling source file 'MFCMain.cpp')
-      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.43.34808\atlmfc\include\afxres.h(264,9):
-      see previous definition of 'ID_EDIT_UNDO'
-  
-  Main.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\resource.h(23,9): warning C4005: 'ID_EDIT_UNDO': macro redefinition
-  (compiling source file 'Main.cpp')
-      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.43.34808\atlmfc\include\afxres.h(264,9):
-      see previous definition of 'ID_EDIT_UNDO'
-  
-  ToolMain.cpp
+﻿  ToolMain.cpp
   _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\resource.h(23,9): warning C4005: 'ID_EDIT_UNDO': macro redefinition
   (compiling source file 'ToolMain.cpp')
@@ -54,5 +33,4 @@ C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(146,5
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(147,54): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(148,57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp(209,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  Generating Code...
   Win32SimpleSample.vcxproj -> C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\x64\Debug\WoFEdit.exe

@@ -6,6 +6,8 @@
 #include "Game.h"
 #include "DisplayObject.h"
 #include <string>
+#include <Windows.h>
+#include <iostream>
 
 
 using namespace DirectX;
@@ -243,6 +245,7 @@ void Game::Update(DX::StepTimer const& timer)
 // Draws the scene.
 void Game::Render()
 {
+
     // Don't try to render anything before the first Update.
     if (m_timer.GetFrameCount() == 0)
     {
@@ -253,7 +256,7 @@ void Game::Render()
 
     m_deviceResources->PIXBeginEvent(L"Render");
     auto context = m_deviceResources->GetD3DDeviceContext();
-
+	
 	if (m_grid)
 	{
 		// Draw procedurally generated dynamic grid
@@ -267,6 +270,8 @@ void Game::Render()
 	std::wstring var = L"Cam X: " + std::to_wstring(mouseState.x) + L"Cam Z: " + std::to_wstring(mouseState.y);
 	m_font->DrawString(m_sprites.get(), var.c_str() , XMFLOAT2(100, 10), Colors::Yellow);
 	m_sprites->End();
+
+	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	//RENDER OBJECTS FROM SCENEGRAPH
 	int numRenderObjects = m_displayList.size();
@@ -287,6 +292,10 @@ void Game::Render()
 
 		m_deviceResources->PIXEndEvent();
 	}
+
+	
+
+
     m_deviceResources->PIXEndEvent();
 
 	//RENDER TERRAIN
@@ -297,6 +306,58 @@ void Game::Render()
 
 	//Render the batch,  This is handled in the Display chunk becuase it has the potential to get complex
 	m_displayChunk.RenderBatch(m_deviceResources);
+
+
+	//render gizmo if selected object
+	if (selectedIndex != -1) {
+		m_deviceResources->PIXBeginEvent(L"Draw model");
+		const XMVECTORF32 scale = { 2, 2, 2 };
+		const XMVECTORF32 translate = { m_displayList[selectedIndex].m_position.x, m_displayList[selectedIndex].m_position.y, m_displayList[selectedIndex].m_position.z };
+
+		for (int i = 0; i < 3; i++) {
+
+
+			XMVECTOR rotate;
+			switch (i) {
+			case 0:
+				// convert degrees into radians for rotation matrix
+				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+					0 * 3.1415 / 180,
+					0 * 3.1415 / 180);
+				break;
+			case 1:
+				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+					90 * 3.1415 / 180,
+					0 * 3.1415 / 180);
+				break;
+			case 2:
+				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+					90 * 3.1415 / 180,
+					90 * 3.1415 / 180);
+				break;
+			}
+
+
+
+
+			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
+
+
+			context->OMSetBlendState(m_states->AlphaBlend(), nullptr, 0xFFFFFFFF);
+			context->OMSetDepthStencilState(m_states->DepthNone(), 0);
+			context->RSSetState(m_states->CullNone());
+
+			context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+			
+			gizmoModels[i]->Draw(context, *m_states, local, m_view, m_projection);
+
+			context->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
+			context->OMSetDepthStencilState(m_states->DepthDefault(), 0);
+		}
+
+		
+	}
+	m_deviceResources->PIXEndEvent();
 
     m_deviceResources->Present();
 }
@@ -558,7 +619,9 @@ void Game::CreateDeviceDependentResources()
 
     // SDKMESH has to use clockwise winding with right-handed coordinates, so textures are flipped in U
     m_model = Model::CreateFromSDKMESH(device, L"tiny.sdkmesh", *m_fxFactory);
-	
+	gizmoModels[0] = Model::CreateFromSDKMESH(device, L"gizmo.sdkmesh", *m_fxFactory);
+	gizmoModels[1] = Model::CreateFromSDKMESH(device, L"gizmoGreen.sdkmesh", *m_fxFactory);
+	gizmoModels[2] = Model::CreateFromSDKMESH(device, L"gizmoBlue.sdkmesh", *m_fxFactory);
 
     // Load textures
     DX::ThrowIfFailed(
@@ -675,8 +738,85 @@ int Game::MousePicking() {
 
 	}
 
+	return selectedID;
+}
+
+int Game::MouseInteractGizmo() {
+
+	int selectedID = -1;
+
+	float pickedDistance = 0;
+
+	float minDistance = 9999999;
+
+	//setup near and far planes with mouse x and y
+	const XMVECTOR nearSource = XMVectorSet(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, 0.f, 1.f);
+	const XMVECTOR farSource = XMVectorSet(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, 1.f, 1.f);
+
+	if (selectedIndex != -1)
+	{
+		for (int i = 0; i < 3; i++) {
+
+			const XMVECTORF32 scale = { 2,2,2 };
+			const XMVECTORF32 translate = { m_displayList[selectedIndex].m_position.x,
+			m_displayList[selectedIndex].m_position.y,m_displayList[selectedIndex].m_position.z };
+
+
+			XMVECTOR rotate;
+			switch (i) {
+			case 0:
+				// convert degrees into radians for rotation matrix
+				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+					0 * 3.1415 / 180,
+					0 * 3.1415 / 180);
+				break;
+			case 1:
+				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+					90 * 3.1415 / 180,
+					0 * 3.1415 / 180);
+				break;
+			case 2:
+				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+					90 * 3.1415 / 180,
+					90 * 3.1415 / 180);
+				break;
+			}
+
+			//create set matrix of selected object in the world based on translation scale and rotation
+			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
+
+			//unproject the points on near and far plane
+			XMVECTOR nearPoint = XMVector3Unproject(nearSource, 0.f, 0.f,
+				m_ScreenDimensions.right, m_ScreenDimensions.bottom,
+				m_deviceResources->GetScreenViewport().MinDepth,
+				m_deviceResources->GetScreenViewport().MaxDepth, m_projection, m_view, local);
+
+			XMVECTOR farPoint = XMVector3Unproject(farSource, 0.f, 0.f,
+				m_ScreenDimensions.right, m_ScreenDimensions.bottom,
+				m_deviceResources->GetScreenViewport().MinDepth,
+				m_deviceResources->GetScreenViewport().MaxDepth, m_projection, m_view, local);
+
+			XMVECTOR pickingVector = farPoint - nearPoint;
+			pickingVector = XMVector3Normalize(pickingVector);
+
+			for (int y = 0; y < m_displayList[i].m_model.get()->meshes.size(); y++) {
+				if (m_displayList[i].m_model.get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
+
+					if (pickedDistance < minDistance) {
+						selectedID = i;
+					}
+
+				}
+			}
+		}
+	}
 
 	return selectedID;
+}
+
+void Game::SetSelectedIndex(int nSelected)
+{
+	selectedIndex = nSelected;
 }
 
 

@@ -53,6 +53,11 @@ public:
 
 	int MousePicking();
 
+	int MouseInteractGizmo();
+
+	void SetSelectedIndex(int nSelected);
+	int selectedIndex;
+
 	RECT m_ScreenDimensions;
 
 #ifdef DXTK_AUDIO
@@ -122,6 +127,13 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>                        m_texture1;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>                        m_texture2;
     Microsoft::WRL::ComPtr<ID3D11InputLayout>                               m_batchInputLayout;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  gizRed;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  gizGreen;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  gizBlue;
+
+
+	std::shared_ptr<DirectX::Model> gizmoModels[3];
 
 #ifdef DXTK_AUDIO
     uint32_t                                                                m_audioEvent;

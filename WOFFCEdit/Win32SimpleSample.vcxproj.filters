@@ -127,6 +127,7 @@
     <Image Include="toolbar1.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="gizRed.dds" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="database\data\Scene1.fbx" />
