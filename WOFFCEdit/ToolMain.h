@@ -32,7 +32,16 @@ public:	//variables
 	ChunkObject					m_chunk;		//our landscape chunk
 	int m_selectedObject;						//ID of current Selection
 
+	int m_selectedGizmo;
+
+	bool canSelect;
+
+	DirectX::XMVECTOR point1;
+	DirectX::XMVECTOR point2;
+
 	std::vector<int> registeredIDs;
+
+	int transformState;
 
 	SceneObject copyObject;
 
@@ -63,4 +72,12 @@ private:	//variables
 	
 
 	
+};
+
+enum GizmoType
+{
+	TRANSLATE,
+	ROTATE,
+	SCALE,
+	NONE
 };

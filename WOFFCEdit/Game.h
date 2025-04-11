@@ -47,6 +47,7 @@ public:
 
 	//tool specific
 	void BuildDisplayList(std::vector<SceneObject> * SceneGraph); //note vector passed by reference 
+	void UpdateDisplayList(std::vector<SceneObject>* SceneGraph);
 	void BuildDisplayChunk(ChunkObject *SceneChunk);
 	void SaveDisplayChunk(ChunkObject *SceneChunk);	//saves geometry et al
 	void ClearDisplayList();
@@ -56,6 +57,15 @@ public:
 	int MouseInteractGizmo();
 
 	void SetSelectedIndex(int nSelected);
+
+	void SetSelectedGizmo(int nSelected);
+
+	DirectX::XMVECTOR ClosestPointBetweenLines(DirectX::XMVECTOR point1, DirectX::XMVECTOR dir1, DirectX::XMVECTOR point2, DirectX::XMVECTOR dir2);
+
+	void ScreenPointToRay(float x, float y, DirectX::XMMATRIX& view, DirectX::XMMATRIX& proj, float screenWidth, float screenHeight, DirectX::XMVECTOR& outOrigin, DirectX::XMVECTOR& outDir);
+
+	DirectX::XMVECTOR DragGizmo(DirectX::XMVECTOR axisDir);
+
 	int selectedIndex;
 
 	RECT m_ScreenDimensions;
@@ -134,6 +144,8 @@ private:
 
 
 	std::shared_ptr<DirectX::Model> gizmoModels[3];
+
+	int selectedGizmo;
 
 #ifdef DXTK_AUDIO
     uint32_t                                                                m_audioEvent;

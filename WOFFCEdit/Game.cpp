@@ -311,7 +311,7 @@ void Game::Render()
 	//render gizmo if selected object
 	if (selectedIndex != -1) {
 		m_deviceResources->PIXBeginEvent(L"Draw model");
-		const XMVECTORF32 scale = { 2, 2, 2 };
+		const XMVECTORF32 scale = { 4, 2, 4 };
 		const XMVECTORF32 translate = { m_displayList[selectedIndex].m_position.x, m_displayList[selectedIndex].m_position.y, m_displayList[selectedIndex].m_position.z };
 
 		for (int i = 0; i < 3; i++) {
@@ -547,6 +547,39 @@ void Game::BuildDisplayList(std::vector<SceneObject> * SceneGraph)
 		
 }
 
+void Game::UpdateDisplayList(std::vector<SceneObject>* SceneGraph)
+{
+	auto device = m_deviceResources->GetD3DDevice();
+	auto devicecontext = m_deviceResources->GetD3DDeviceContext();
+
+	//for every item in the scenegraph
+	int numObjects = m_displayList.size();
+	for (int i = 0; i < numObjects; i++)
+	{
+		m_displayList[i];
+
+		//set position
+		m_displayList[i].m_position.x = SceneGraph->at(i).posX;
+		m_displayList[i].m_position.y = SceneGraph->at(i).posY;
+		m_displayList[i].m_position.z = SceneGraph->at(i).posZ;
+
+		//setorientation
+		m_displayList[i].m_orientation.x = SceneGraph->at(i).rotX;
+		m_displayList[i].m_orientation.y = SceneGraph->at(i).rotY;
+		m_displayList[i].m_orientation.z = SceneGraph->at(i).rotZ;
+
+		//set scale
+		m_displayList[i].m_scale.x = SceneGraph->at(i).scaX;
+		m_displayList[i].m_scale.y = SceneGraph->at(i).scaY;
+		m_displayList[i].m_scale.z = SceneGraph->at(i).scaZ;
+
+
+	}
+
+
+
+}
+
 
 
 void Game::BuildDisplayChunk(ChunkObject * SceneChunk)
@@ -757,7 +790,7 @@ int Game::MouseInteractGizmo() {
 	{
 		for (int i = 0; i < 3; i++) {
 
-			const XMVECTORF32 scale = { 2,2,2 };
+			const XMVECTORF32 scale = { 4,2,4 };
 			const XMVECTORF32 translate = { m_displayList[selectedIndex].m_position.x,
 			m_displayList[selectedIndex].m_position.y,m_displayList[selectedIndex].m_position.z };
 
@@ -799,8 +832,8 @@ int Game::MouseInteractGizmo() {
 			XMVECTOR pickingVector = farPoint - nearPoint;
 			pickingVector = XMVector3Normalize(pickingVector);
 
-			for (int y = 0; y < m_displayList[i].m_model.get()->meshes.size(); y++) {
-				if (m_displayList[i].m_model.get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
+			for (int y = 0; y < gizmoModels[i].get()->meshes.size(); y++) {
+				if (gizmoModels[i].get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
 
 					if (pickedDistance < minDistance) {
 						selectedID = i;
@@ -814,9 +847,68 @@ int Game::MouseInteractGizmo() {
 	return selectedID;
 }
 
+void Game::ScreenPointToRay(float x, float y, XMMATRIX& view, XMMATRIX& proj, float screenWidth, float screenHeight, XMVECTOR& outOrigin, XMVECTOR& outDir)
+{
+	XMVECTOR nearPoint = XMVector3Unproject(
+	XMVectorSet(x,y,0.f,1.f),
+	0.f,0.f,screenWidth,screenHeight,0.f,1.f,
+	proj,view,XMMatrixIdentity()
+	);
+	XMVECTOR farPoint = XMVector3Unproject(
+		XMVectorSet(x, y, 1.0f, 1.0f),
+		0.0f, 0.0f, screenWidth, screenHeight, 0.0f, 1.0f,
+		proj, view, XMMatrixIdentity()
+	);
+
+	outOrigin = nearPoint;
+	outDir = XMVector3Normalize(XMVectorSubtract(farPoint, nearPoint));
+}
+
+XMVECTOR Game::DragGizmo(XMVECTOR axisDir) 
+{
+	XMMATRIX viewM = m_view;
+	XMMATRIX projM = m_projection;
+
+	XMVECTOR axisOrigin = XMVectorSet(m_displayList[selectedIndex].m_position.x,
+			m_displayList[selectedIndex].m_position.y,m_displayList[selectedIndex].m_position.z,1);
+
+	XMVECTOR mouseRayOrigin, mouseRayDir;
+	ScreenPointToRay(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, viewM, projM, m_ScreenDimensions.right, m_ScreenDimensions.bottom, mouseRayOrigin, mouseRayDir);
+
+	XMVECTOR clickPoint = ClosestPointBetweenLines(axisOrigin, axisDir, mouseRayOrigin, mouseRayDir);
+
+	return clickPoint;
+}
+
 void Game::SetSelectedIndex(int nSelected)
 {
 	selectedIndex = nSelected;
+}
+
+void Game::SetSelectedGizmo(int nSelected)
+{
+	selectedGizmo = nSelected;
+}
+
+XMVECTOR Game::ClosestPointBetweenLines(XMVECTOR point1, XMVECTOR dir1, XMVECTOR point2, XMVECTOR dir2)
+{
+	XMVECTOR ray = XMVectorSubtract(point1, point2);
+
+	float a = XMVectorGetX(XMVector3Dot(dir1,dir1));
+	float b = XMVectorGetX(XMVector3Dot(dir1, dir2));
+	float c = XMVectorGetX(XMVector3Dot(dir2, dir2));
+	float d = XMVectorGetX(XMVector3Dot(dir1, ray));
+	float e = XMVectorGetX(XMVector3Dot(dir2, ray));
+
+
+	float denom = a * c - b * b;
+
+	if (fabs(denom)< 1e-6f){
+		return point1;
+	}
+
+	float t = (b * e - c * d) / denom;
+	return XMVectorMultiplyAdd(dir1, XMVectorReplicate(t), point1);
 }
 
 

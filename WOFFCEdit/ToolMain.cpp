@@ -23,6 +23,9 @@ ToolMain::ToolMain()
 	m_toolInputCommands.mouse_X = 0;
 	m_toolInputCommands.mouse_Y = 0;
 
+	m_selectedGizmo = -1;
+
+	transformState = GizmoType::TRANSLATE;
 }
 
 
@@ -296,7 +299,73 @@ void ToolMain::Tick(MSG *msg)
 	//Renderer Update Call
 	m_d3dRenderer.Tick(&m_toolInputCommands);
 
+
+
 	if (m_toolInputCommands.mouse_LB_Down) {
+		if (m_selectedGizmo != -1 && m_selectedObject != -1) {
+
+
+			point1 = point2;
+			
+
+			DirectX::XMVECTOR axis;
+
+			if (m_selectedGizmo == 0) {
+				axis = DirectX::XMVectorSet(0,1,0,1);
+			}
+			if (m_selectedGizmo == 1) {
+				axis = DirectX::XMVectorSet(0, 0, 1, 1);
+
+			}
+			if (m_selectedGizmo == 2) {
+				axis = DirectX::XMVectorSet(1, 0, 0, 1);
+			}
+
+			point2 = m_d3dRenderer.DragGizmo(axis);
+
+			if (DirectX::XMVectorGetX(point1) != 0 && DirectX::XMVectorGetY(point1) != 0, DirectX::XMVectorGetZ(point1) != 0) {
+				if (DirectX::XMVectorGetX(point2) != 0 && DirectX::XMVectorGetY(point2) != 0, DirectX::XMVectorGetZ(point2) != 0) {
+					DirectX::XMVECTOR diff = DirectX::XMVectorSubtract(point2, point1);
+
+					switch (transformState) {
+
+						case GizmoType::TRANSLATE:
+							if (m_selectedGizmo == 0) {
+								m_sceneGraph[m_selectedObject].posY += DirectX::XMVectorGetY(diff);
+							}
+							if (m_selectedGizmo == 1) {
+								m_sceneGraph[m_selectedObject].posZ += DirectX::XMVectorGetZ(diff);
+
+							}
+							if (m_selectedGizmo == 2) {
+								m_sceneGraph[m_selectedObject].posX += DirectX::XMVectorGetX(diff);
+							}
+							break;
+						case GizmoType::SCALE:
+							if (m_selectedGizmo == 0) {
+								m_sceneGraph[m_selectedObject].scaY += DirectX::XMVectorGetY(diff);
+							}
+							if (m_selectedGizmo == 1) {
+								m_sceneGraph[m_selectedObject].scaZ += DirectX::XMVectorGetZ(diff);
+
+							}
+							if (m_selectedGizmo == 2) {
+								m_sceneGraph[m_selectedObject].scaX -= DirectX::XMVectorGetX(diff);
+							}
+							break;
+					}
+					
+					
+					
+
+					m_d3dRenderer.UpdateDisplayList(&m_sceneGraph);
+				}
+			}
+		}
+
+	}
+
+	if (canSelect) {
 
 
 		//store the selected object temporarily
@@ -308,18 +377,27 @@ void ToolMain::Tick(MSG *msg)
 			int gizmoInteract = m_d3dRenderer.MouseInteractGizmo();
 
 			if (gizmoInteract != -1) {
+				UpdateHistory();
+				futureHistory = std::stack<std::vector<SceneObject>>();
+				m_selectedGizmo = gizmoInteract;
 				
 			}
 			else {
 				m_selectedObject = -1;
+				m_selectedGizmo = -1;
 			}
 		}
 		else {
 			m_selectedObject = tempSelect;
 		}
-		m_toolInputCommands.mouse_LB_Down = false;
+
 		m_d3dRenderer.SetSelectedIndex(m_selectedObject);
+		m_d3dRenderer.SetSelectedGizmo(m_selectedGizmo);
+		canSelect = false;
 	}
+
+	
+	
 
 	if (m_toolInputCommands.copy) {
 
@@ -383,6 +461,8 @@ void ToolMain::Tick(MSG *msg)
 			m_sceneGraph.erase(m_sceneGraph.begin() + m_selectedObject);
 			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
 			m_selectedObject = -1;
+			m_d3dRenderer.SetSelectedIndex(-1);
+			m_d3dRenderer.SetSelectedGizmo(-1);
 		}
 	}
 }
@@ -419,15 +499,20 @@ void ToolMain::UpdateInput(MSG* msg)
 		//set some flag for the mouse button in inputcommands
 		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
 		m_toolInputCommands.mouse_LB_Down = true;
+		canSelect = true;
+		point1 = DirectX::XMVectorSet(0, 0, 0, 1);
+		point2 = DirectX::XMVectorSet(0, 0, 0, 1);
+		break;
+
+	case WM_LBUTTONUP:
+		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
+		m_toolInputCommands.mouse_LB_Down = false;
 		break;
 	case WM_RBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
 		//set some flag for the mouse button in inputcommands
 		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
 		break;
-	case WM_LBUTTONUP:	//mouse button down,  you will probably need to check when its up too
-		//set some flag for the mouse button in inputcommands
-		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
-		break;
+
 	case WM_RBUTTONUP:	//mouse button down,  you will probably need to check when its up too
 		//set some flag for the mouse button in inputcommands
 		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
