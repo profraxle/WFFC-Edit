@@ -14,7 +14,7 @@
     <Filter Include="Tool">
       <UniqueIdentifier>{d7f2fe17-cf51-4850-b021-5c88dd261313}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SQLITE">
+    <Filter Include="Resource Files\SQLITE">
       <UniqueIdentifier>{a006b0b6-46b2-4c4f-808a-ec8fe3e790eb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -36,7 +36,7 @@
       <Filter>Tool</Filter>
     </ClCompile>
     <ClCompile Include="sqlite3.c">
-      <Filter>SQLITE</Filter>
+      <Filter>Resource Files\SQLITE</Filter>
     </ClCompile>
     <ClCompile Include="SceneObject.cpp">
       <Filter>Tool</Filter>
@@ -84,7 +84,7 @@
       <Filter>Tool</Filter>
     </ClInclude>
     <ClInclude Include="sqlite3.h">
-      <Filter>SQLITE</Filter>
+      <Filter>Resource Files\SQLITE</Filter>
     </ClInclude>
     <ClInclude Include="SceneObject.h">
       <Filter>Tool</Filter>

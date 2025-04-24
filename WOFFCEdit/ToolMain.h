@@ -9,6 +9,8 @@
 #include <vector>
 #include <stack>
 
+class MFCMain;
+
 class ToolMain
 {
 public: //methods
@@ -71,6 +73,10 @@ private:	//variables
 	int m_currentChunk;			//the current chunk of thedatabase that we are operating on.  Dictates loading and saving. 
 	
 
+	MFCMain * m_MFCMain;
+
+public:
+	void SetMFCMain(MFCMain* n_MFCMain);
 	
 };
 

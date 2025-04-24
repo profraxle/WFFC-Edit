@@ -55,6 +55,8 @@ Game::Game()
 	m_camOrientation.y = 0.0f;
 	m_camOrientation.z = 0.0f;
 
+	m_SelectedIndex = 0;
+
 }
 
 Game::~Game()
@@ -307,12 +309,16 @@ void Game::Render()
 	//Render the batch,  This is handled in the Display chunk becuase it has the potential to get complex
 	m_displayChunk.RenderBatch(m_deviceResources);
 
+	context->OMSetBlendState(m_states->AlphaBlend(), nullptr, 0xFFFFFFFF);
+	context->OMSetDepthStencilState(m_states->DepthNone(), 0);
+	context->RSSetState(m_states->CullNone());
 
+	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	//render gizmo if selected object
-	if (selectedIndex != -1) {
+	if (m_SelectedIndex != -1) {
 		m_deviceResources->PIXBeginEvent(L"Draw model");
 		const XMVECTORF32 scale = { 4, 2, 4 };
-		const XMVECTORF32 translate = { m_displayList[selectedIndex].m_position.x, m_displayList[selectedIndex].m_position.y, m_displayList[selectedIndex].m_position.z };
+		const XMVECTORF32 translate = { m_displayList[m_SelectedIndex].m_position.x, m_displayList[m_SelectedIndex].m_position.y, m_displayList[m_SelectedIndex].m_position.z };
 
 		for (int i = 0; i < 3; i++) {
 
@@ -343,13 +349,9 @@ void Game::Render()
 			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
 
 
-			context->OMSetBlendState(m_states->AlphaBlend(), nullptr, 0xFFFFFFFF);
-			context->OMSetDepthStencilState(m_states->DepthNone(), 0);
-			context->RSSetState(m_states->CullNone());
 
-			context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 			
-			gizmoModels[i]->Draw(context, *m_states, local, m_view, m_projection);
+			m_gizmoModels[m_gizmoMode][i]->Draw(context, *m_states, local, m_view, m_projection);
 
 			context->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
 			context->OMSetDepthStencilState(m_states->DepthDefault(), 0);
@@ -652,9 +654,18 @@ void Game::CreateDeviceDependentResources()
 
     // SDKMESH has to use clockwise winding with right-handed coordinates, so textures are flipped in U
     m_model = Model::CreateFromSDKMESH(device, L"tiny.sdkmesh", *m_fxFactory);
-	gizmoModels[0] = Model::CreateFromSDKMESH(device, L"gizmo.sdkmesh", *m_fxFactory);
-	gizmoModels[1] = Model::CreateFromSDKMESH(device, L"gizmoGreen.sdkmesh", *m_fxFactory);
-	gizmoModels[2] = Model::CreateFromSDKMESH(device, L"gizmoBlue.sdkmesh", *m_fxFactory);
+
+	//store translation gizmo models
+	m_gizmoModels[0][0] = Model::CreateFromSDKMESH(device, L"gizmo.sdkmesh", *m_fxFactory);
+	m_gizmoModels[0][1] = Model::CreateFromSDKMESH(device, L"gizmoGreen.sdkmesh", *m_fxFactory);
+	m_gizmoModels[0][2] = Model::CreateFromSDKMESH(device, L"gizmoBlue.sdkmesh", *m_fxFactory);
+
+	//store rotator gizmo models
+	m_gizmoModels[1][0] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
+	m_gizmoModels[1][1] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
+	m_gizmoModels[1][2] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
+
+	m_gizmoMode = 1;
 
     // Load textures
     DX::ThrowIfFailed(
@@ -761,6 +772,7 @@ int Game::MousePicking() {
 		for (int y = 0; y < m_displayList[i].m_model.get()->meshes.size();y++) {
 			if (m_displayList[i].m_model.get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
 					
+
 				if (pickedDistance < minDistance) {
 					selectedID = i;
 				}
@@ -786,13 +798,13 @@ int Game::MouseInteractGizmo() {
 	const XMVECTOR nearSource = XMVectorSet(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, 0.f, 1.f);
 	const XMVECTOR farSource = XMVectorSet(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, 1.f, 1.f);
 
-	if (selectedIndex != -1)
+	if (m_SelectedIndex != -1)
 	{
 		for (int i = 0; i < 3; i++) {
 
 			const XMVECTORF32 scale = { 4,2,4 };
-			const XMVECTORF32 translate = { m_displayList[selectedIndex].m_position.x,
-			m_displayList[selectedIndex].m_position.y,m_displayList[selectedIndex].m_position.z };
+			const XMVECTORF32 translate = { m_displayList[m_SelectedIndex].m_position.x,
+			m_displayList[m_SelectedIndex].m_position.y,m_displayList[m_SelectedIndex].m_position.z };
 
 
 			XMVECTOR rotate;
@@ -832,8 +844,8 @@ int Game::MouseInteractGizmo() {
 			XMVECTOR pickingVector = farPoint - nearPoint;
 			pickingVector = XMVector3Normalize(pickingVector);
 
-			for (int y = 0; y < gizmoModels[i].get()->meshes.size(); y++) {
-				if (gizmoModels[i].get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
+			for (int y = 0; y < m_gizmoModels[m_gizmoMode][i].get()->meshes.size(); y++) {
+				if (m_gizmoModels[m_gizmoMode][i].get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
 
 					if (pickedDistance < minDistance) {
 						selectedID = i;
@@ -869,8 +881,8 @@ XMVECTOR Game::DragGizmo(XMVECTOR axisDir)
 	XMMATRIX viewM = m_view;
 	XMMATRIX projM = m_projection;
 
-	XMVECTOR axisOrigin = XMVectorSet(m_displayList[selectedIndex].m_position.x,
-			m_displayList[selectedIndex].m_position.y,m_displayList[selectedIndex].m_position.z,1);
+	XMVECTOR axisOrigin = XMVectorSet(m_displayList[m_SelectedIndex].m_position.x,
+			m_displayList[m_SelectedIndex].m_position.y,m_displayList[m_SelectedIndex].m_position.z,1);
 
 	XMVECTOR mouseRayOrigin, mouseRayDir;
 	ScreenPointToRay(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, viewM, projM, m_ScreenDimensions.right, m_ScreenDimensions.bottom, mouseRayOrigin, mouseRayDir);
@@ -880,20 +892,38 @@ XMVECTOR Game::DragGizmo(XMVECTOR axisDir)
 	return clickPoint;
 }
 
+XMVECTOR Game::DragRotGizmo(XMVECTOR rotateAxis) {
+
+	XMMATRIX viewM = m_view;
+	XMMATRIX projM = m_projection;
+
+	XMVECTOR planeOrigin = XMVectorSet(m_displayList[m_SelectedIndex].m_position.x,
+		m_displayList[m_SelectedIndex].m_position.y, m_displayList[m_SelectedIndex].m_position.z, 1);
+
+	XMVECTOR mouseRayOrigin, mouseRayDir;
+	ScreenPointToRay(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, viewM, projM, m_ScreenDimensions.right, m_ScreenDimensions.bottom, mouseRayOrigin, mouseRayDir);
+
+	XMVECTOR clickPoint = ClosestPointOnPlane(mouseRayOrigin,mouseRayDir,planeOrigin,rotateAxis);
+	return clickPoint;
+}
+
 void Game::SetSelectedIndex(int nSelected)
 {
-	selectedIndex = nSelected;
+	m_SelectedIndex = nSelected;
 }
 
 void Game::SetSelectedGizmo(int nSelected)
 {
-	selectedGizmo = nSelected;
+	m_selectedGizmo = nSelected;
 }
 
 XMVECTOR Game::ClosestPointBetweenLines(XMVECTOR point1, XMVECTOR dir1, XMVECTOR point2, XMVECTOR dir2)
 {
+	//get the closes point on the line provided and the line of the axis being moved on
+
 	XMVECTOR ray = XMVectorSubtract(point1, point2);
 
+	//dot products needed for formula
 	float a = XMVectorGetX(XMVector3Dot(dir1,dir1));
 	float b = XMVectorGetX(XMVector3Dot(dir1, dir2));
 	float c = XMVectorGetX(XMVector3Dot(dir2, dir2));
@@ -903,12 +933,49 @@ XMVECTOR Game::ClosestPointBetweenLines(XMVECTOR point1, XMVECTOR dir1, XMVECTOR
 
 	float denom = a * c - b * b;
 
+	//if denominator is close to zero just return the original point
 	if (fabs(denom)< 1e-6f){
 		return point1;
 	}
 
+	//find the scalar along the direction to get the point
 	float t = (b * e - c * d) / denom;
 	return XMVectorMultiplyAdd(dir1, XMVectorReplicate(t), point1);
+}
+
+XMVECTOR Game::ClosestPointOnPlane(XMVECTOR point1, XMVECTOR dir, XMVECTOR planeOrigin, XMVECTOR planeNormal) 
+{
+	float denom = XMVectorGetX(XMVector3Dot(planeNormal, dir));
+	if (fabs(denom) < 1e-6f) {
+		//if parallel, fallback
+		return point1;
+	}
+
+	float t = XMVectorGetX(XMVector3Dot(planeOrigin - point1, planeNormal)) / denom;
+	return point1 + t * dir;
+}
+
+float Game::GetAngleDiff(XMVECTOR point1, XMVECTOR point2, XMVECTOR rotAxis) 
+{
+	XMVECTOR planeOrigin = XMVectorSet(m_displayList[m_SelectedIndex].m_position.x,
+		m_displayList[m_SelectedIndex].m_position.y, m_displayList[m_SelectedIndex].m_position.z, 1);
+
+	XMVECTOR v1 = XMVector3Normalize(point1-planeOrigin);
+	XMVECTOR v2 = XMVector3Normalize(point2 - planeOrigin);
+
+	XMVECTOR cross = XMVector3Cross(v1, v2);
+	float angle = acosf(XMVectorGetX(XMVector3Dot(v1, v2)));
+
+	if (XMVectorGetX(XMVector3Dot(cross, rotAxis)) < 0) {
+		angle = -angle;
+	}
+	angle = -angle;
+
+	float radToDeg = 180.0f / XM_PI;
+
+	angle = angle * radToDeg;
+
+	return angle;
 }
 
 
@@ -926,3 +993,7 @@ std::wstring StringToWCHART(std::string s)
 	delete[] buf;
 	return r;
 }
+
+
+
+

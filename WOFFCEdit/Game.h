@@ -61,12 +61,17 @@ public:
 	void SetSelectedGizmo(int nSelected);
 
 	DirectX::XMVECTOR ClosestPointBetweenLines(DirectX::XMVECTOR point1, DirectX::XMVECTOR dir1, DirectX::XMVECTOR point2, DirectX::XMVECTOR dir2);
+	DirectX::XMVECTOR ClosestPointOnPlane(DirectX::XMVECTOR point1, DirectX::XMVECTOR dir, DirectX::XMVECTOR planeOrigin, DirectX::XMVECTOR planeNormal);
+
+	float GetAngleDiff(DirectX::XMVECTOR point1, DirectX::XMVECTOR point2, DirectX::XMVECTOR rotAxis);
 
 	void ScreenPointToRay(float x, float y, DirectX::XMMATRIX& view, DirectX::XMMATRIX& proj, float screenWidth, float screenHeight, DirectX::XMVECTOR& outOrigin, DirectX::XMVECTOR& outDir);
 
 	DirectX::XMVECTOR DragGizmo(DirectX::XMVECTOR axisDir);
+	DirectX::XMVECTOR DragRotGizmo(DirectX::XMVECTOR rotateAxis);
 
-	int selectedIndex;
+
+	int m_SelectedIndex;
 
 	RECT m_ScreenDimensions;
 
@@ -143,9 +148,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  gizBlue;
 
 
-	std::shared_ptr<DirectX::Model> gizmoModels[3];
+	std::shared_ptr<DirectX::Model> m_gizmoModels[3][3];
 
-	int selectedGizmo;
+
+	int m_gizmoMode;
+	int m_selectedGizmo;
 
 #ifdef DXTK_AUDIO
     uint32_t                                                                m_audioEvent;
@@ -157,7 +164,6 @@ private:
     DirectX::SimpleMath::Matrix                                             m_world;
     DirectX::SimpleMath::Matrix                                             m_view;
     DirectX::SimpleMath::Matrix                                             m_projection;
-
 
 };
 

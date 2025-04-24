@@ -3,13 +3,14 @@
 #include <vector>
 #include <sstream>
 #include "Mouse.h"
+#include "MFCMain.h"
 //
 //ToolMain Class
 ToolMain::ToolMain()
 {
 
 	m_currentChunk = 0;		//default value
-	m_selectedObject = 0;	//initial selection ID
+	m_selectedObject = -1;	//initial selection ID
 	m_sceneGraph.clear();	//clear the vector for the scenegraph
 	m_databaseConnection = NULL;
 
@@ -25,7 +26,7 @@ ToolMain::ToolMain()
 
 	m_selectedGizmo = -1;
 
-	transformState = GizmoType::TRANSLATE;
+	transformState = GizmoType::ROTATE;
 }
 
 
@@ -321,7 +322,15 @@ void ToolMain::Tick(MSG *msg)
 				axis = DirectX::XMVectorSet(1, 0, 0, 1);
 			}
 
-			point2 = m_d3dRenderer.DragGizmo(axis);
+
+			switch (transformState) {
+				case GizmoType::TRANSLATE:
+					point2 = m_d3dRenderer.DragGizmo(axis);
+					break;
+				case GizmoType::ROTATE:
+					point2 = m_d3dRenderer.DragRotGizmo(axis);
+					break;
+			}
 
 			if (DirectX::XMVectorGetX(point1) != 0 && DirectX::XMVectorGetY(point1) != 0, DirectX::XMVectorGetZ(point1) != 0) {
 				if (DirectX::XMVectorGetX(point2) != 0 && DirectX::XMVectorGetY(point2) != 0, DirectX::XMVectorGetZ(point2) != 0) {
@@ -353,9 +362,28 @@ void ToolMain::Tick(MSG *msg)
 								m_sceneGraph[m_selectedObject].scaX -= DirectX::XMVectorGetX(diff);
 							}
 							break;
+						case GizmoType::ROTATE:
+
+							float angle = m_d3dRenderer.GetAngleDiff(point2,point1,axis);
+
+							if (std::isfinite(angle)) {
+
+								if (m_selectedGizmo == 0) {
+									m_sceneGraph[m_selectedObject].rotY += angle;
+								}
+								if (m_selectedGizmo == 1) {
+									m_sceneGraph[m_selectedObject].rotZ += angle;
+
+								}
+								if (m_selectedGizmo == 2) {
+									m_sceneGraph[m_selectedObject].rotX += angle;
+								}
+							}
+
+							break;
 					}
 					
-					
+
 					
 
 					m_d3dRenderer.UpdateDisplayList(&m_sceneGraph);
@@ -371,10 +399,10 @@ void ToolMain::Tick(MSG *msg)
 		//store the selected object temporarily
 		int tempSelect = m_d3dRenderer.MousePicking();
 
-		//if a different object is selected, update ID or deselect if same
-		if (tempSelect == m_selectedObject) {
+		int gizmoInteract = m_d3dRenderer.MouseInteractGizmo();
 
-			int gizmoInteract = m_d3dRenderer.MouseInteractGizmo();
+		//if a different object is selected, update ID or deselect if same
+		if (tempSelect == m_selectedObject ) {
 
 			if (gizmoInteract != -1) {
 				UpdateHistory();
@@ -388,15 +416,23 @@ void ToolMain::Tick(MSG *msg)
 			}
 		}
 		else {
-			m_selectedObject = tempSelect;
+
+			if (gizmoInteract != -1) {
+				UpdateHistory();
+				futureHistory = std::stack<std::vector<SceneObject>>();
+				m_selectedGizmo = gizmoInteract;
+
+			}
+			else {
+
+				m_selectedObject = tempSelect;
+			}
 		}
 
 		m_d3dRenderer.SetSelectedIndex(m_selectedObject);
 		m_d3dRenderer.SetSelectedGizmo(m_selectedGizmo);
 		canSelect = false;
 	}
-
-	
 	
 
 	if (m_toolInputCommands.copy) {
@@ -473,6 +509,11 @@ void ToolMain::UpdateHistory() {
 
 void ToolMain::UpdateFutureHistory() {
 	futureHistory.push(m_sceneGraph);
+}
+
+void ToolMain::SetMFCMain(MFCMain* n_MFCMain)
+{
+	m_MFCMain = n_MFCMain;
 }
 
 void ToolMain::UpdateInput(MSG* msg)
