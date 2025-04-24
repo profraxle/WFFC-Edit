@@ -994,6 +994,59 @@ std::wstring StringToWCHART(std::string s)
 	return r;
 }
 
+int Game::TestGizmoRingHit(const XMVECTOR& rayOrigin,const XMVECTOR& rayDirection,const XMVECTOR& ringCenter,const float ringRadius,const float segmentWidth,const float segmentHeight,const float segmentDepth,const int segmentCount,const XMVECTOR& axisNormal, const XMVECTOR& axisRight){   // e.g. (0,0,1) for Z-up ring     // vector perpendicular to axisNormal for ring layout) {
+	int hitSegment = -1;
+	float closestDist = FLT_MAX;
 
+	for (int i = 0; i < segmentCount; ++i) {
+		float angle = XM_2PI * i / segmentCount;
+
+		// Compute circle position
+		float x = cosf(angle);
+		float y = sinf(angle);
+		XMVECTOR offset = axisRight * x * ringRadius +
+			XMVector3Cross(axisNormal, axisRight) * y * ringRadius;
+
+		XMVECTOR segmentCenter = ringCenter + offset;
+
+		// Rotation to align box tangential to the ring
+		XMVECTOR tangent = XMVector3Normalize(
+			axisRight * -sinf(angle) +
+			XMVector3Cross(axisNormal, axisRight) * cosf(angle)
+		);
+		XMVECTOR up = axisNormal;
+		XMVECTOR right = XMVector3Cross(up, tangent);
+
+		XMMATRIX rotMatrix = XMMatrixSet(
+			XMVectorGetX(right), XMVectorGetX(up), XMVectorGetX(tangent), 0,
+			XMVectorGetY(right), XMVectorGetY(up), XMVectorGetY(tangent), 0,
+			XMVectorGetZ(right), XMVectorGetZ(up), XMVectorGetZ(tangent), 0,
+			0, 0, 0, 1
+		);
+
+		XMVECTOR orientation = XMQuaternionRotationMatrix(rotMatrix);
+
+		// Create OBB
+		BoundingOrientedBox box;
+		box.Center = { 0, 0, 0 };
+		box.Extents = XMFLOAT3(segmentWidth * 0.5f, segmentHeight * 0.5f, segmentDepth * 0.5f);
+		XMStoreFloat4(&box.Orientation, orientation);
+
+		// Transform OBB to world
+		BoundingOrientedBox transformedBox;
+		box.Transform(transformedBox, XMMatrixRotationQuaternion(orientation) * XMMatrixTranslationFromVector(segmentCenter));
+
+		// Ray test
+		float dist = 0.0f;
+		if (transformedBox.Intersects(rayOrigin, rayDirection, dist)) {
+			if (dist < closestDist) {
+				closestDist = dist;
+				hitSegment = i;
+			}
+		}
+	}
+
+	return hitSegment;
+}
 
 

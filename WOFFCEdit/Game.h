@@ -70,6 +70,18 @@ public:
 	DirectX::XMVECTOR DragGizmo(DirectX::XMVECTOR axisDir);
 	DirectX::XMVECTOR DragRotGizmo(DirectX::XMVECTOR rotateAxis);
 
+	int TestGizmoRingHit(
+		const DirectX::XMVECTOR& rayOrigin,
+		const DirectX::XMVECTOR& rayDirection,
+		const DirectX::XMVECTOR& ringCenter,
+		const float ringRadius,
+		const float segmentWidth,
+		const float segmentHeight,
+		const float segmentDepth,
+		const int segmentCount,
+		const DirectX::XMVECTOR& axisNormal,   // e.g. (0,0,1) for Z-up ring
+		const DirectX::XMVECTOR& axisRight     // vector perpendicular to axisNormal for ring layout
+	);
 
 	int m_SelectedIndex;
 
