@@ -401,7 +401,7 @@ void ToolMain::Tick(MSG *msg)
 
 		int gizmoInteract = -1;
 		if (transformState == GizmoType::ROTATE){
-			 gizmoInteract = m_d3dRenderer.TestGizmoRingHitMulti(1.f,0.05f,0.05f,0.05f,16);
+			 gizmoInteract = m_d3dRenderer.TestGizmoRingHitMulti(1.f,0.05f,0.05f,0.05f,160);
 		}
 		else {
 			gizmoInteract = m_d3dRenderer.MouseInteractGizmo();

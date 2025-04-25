@@ -317,7 +317,7 @@ void Game::Render()
 	//render gizmo if selected object
 	if (m_SelectedIndex != -1) {
 		m_deviceResources->PIXBeginEvent(L"Draw model");
-		const XMVECTORF32 scale = { 4, 2, 4 };
+		const XMVECTORF32 scale = { 4, 4, 4 };
 		const XMVECTORF32 translate = { m_displayList[m_SelectedIndex].m_position.x, m_displayList[m_SelectedIndex].m_position.y, m_displayList[m_SelectedIndex].m_position.z };
 
 		for (int i = 0; i < 3; i++) {
@@ -1065,11 +1065,16 @@ int Game::TestGizmoRingHitMulti(
 		XMVECTOR right;
 	};
 
+	int closestRing = -1;
+
 	RingInfo rings[3] = {
-		{ 0, XMVectorSet(1, 0, 0, 0), XMVectorSet(0, 0, 1, 0) }, // X ring (YZ plane)
-		{1, XMVectorSet(0, 1, 0, 0), XMVectorSet(1, 0, 0, 0) }, // Y ring (XZ plane)
-		{ 2, XMVectorSet(0, 0, 1, 0), XMVectorSet(1, 0, 0, 0) }  // Z ring (XY plane)
+		{ 2, XMVectorSet(1, 0, 0, 0), XMVectorSet(0, 0, 1, 0) }, // X ring (YZ plane)
+		{0, XMVectorSet(0, 1, 0, 0), XMVectorSet(1, 0, 0, 0) }, // Y ring (XZ plane)
+		{ 1, XMVectorSet(0, 0, 1, 0), XMVectorSet(1, 0, 0, 0) }  // Z ring (XY plane)
 	};
+
+	if (m_SelectedIndex != -1)
+	{
 
 	XMVECTOR rayOrigin, rayDirection;
 
@@ -1078,10 +1083,12 @@ int Game::TestGizmoRingHitMulti(
 	ScreenPointToRay(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, viewM, projM, m_ScreenDimensions.right, m_ScreenDimensions.bottom, rayOrigin, rayDirection);
 
 
+
+
 	const XMVECTORF32 ringCenter = { m_displayList[m_SelectedIndex].m_position.x,
 			m_displayList[m_SelectedIndex].m_position.y,m_displayList[m_SelectedIndex].m_position.z };
 
-	int closestRing = -1;
+	
 	float closestDistance = FLT_MAX;
 
 	for (const auto& ring : rings) {
@@ -1128,6 +1135,7 @@ int Game::TestGizmoRingHitMulti(
 				}
 			}
 		}
+	}
 	}
 
 	return closestRing; // RING_X, RING_Y, RING_Z, or RING_NONE
