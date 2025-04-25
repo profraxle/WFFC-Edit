@@ -995,6 +995,9 @@ std::wstring StringToWCHART(std::string s)
 }
 
 int Game::TestGizmoRingHit(const XMVECTOR& rayOrigin,const XMVECTOR& rayDirection,const XMVECTOR& ringCenter,const float ringRadius,const float segmentWidth,const float segmentHeight,const float segmentDepth,const int segmentCount,const XMVECTOR& axisNormal, const XMVECTOR& axisRight){   // e.g. (0,0,1) for Z-up ring     // vector perpendicular to axisNormal for ring layout) {
+
+
+
 	int hitSegment = -1;
 	float closestDist = FLT_MAX;
 
@@ -1047,6 +1050,87 @@ int Game::TestGizmoRingHit(const XMVECTOR& rayOrigin,const XMVECTOR& rayDirectio
 	}
 
 	return hitSegment;
+}
+
+int Game::TestGizmoRingHitMulti(
+	const float ringRadius,
+	const float segmentWidth,
+	const float segmentHeight,
+	const float segmentDepth,
+	const int segmentCount
+) {
+	struct RingInfo {
+		int id;
+		XMVECTOR normal;
+		XMVECTOR right;
+	};
+
+	RingInfo rings[3] = {
+		{ 0, XMVectorSet(1, 0, 0, 0), XMVectorSet(0, 0, 1, 0) }, // X ring (YZ plane)
+		{1, XMVectorSet(0, 1, 0, 0), XMVectorSet(1, 0, 0, 0) }, // Y ring (XZ plane)
+		{ 2, XMVectorSet(0, 0, 1, 0), XMVectorSet(1, 0, 0, 0) }  // Z ring (XY plane)
+	};
+
+	XMVECTOR rayOrigin, rayDirection;
+
+	XMMATRIX viewM = m_view;
+	XMMATRIX projM = m_projection;
+	ScreenPointToRay(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, viewM, projM, m_ScreenDimensions.right, m_ScreenDimensions.bottom, rayOrigin, rayDirection);
+
+
+	const XMVECTORF32 ringCenter = { m_displayList[m_SelectedIndex].m_position.x,
+			m_displayList[m_SelectedIndex].m_position.y,m_displayList[m_SelectedIndex].m_position.z };
+
+	int closestRing = -1;
+	float closestDistance = FLT_MAX;
+
+	for (const auto& ring : rings) {
+		for (int i = 0; i < segmentCount; ++i) {
+			float angle = XM_2PI * i / segmentCount;
+
+			float x = cosf(angle);
+			float y = sinf(angle);
+
+			XMVECTOR offset = ring.right * x * ringRadius +
+				XMVector3Cross(ring.normal, ring.right) * y * ringRadius;
+			XMVECTOR segmentCenter = ringCenter + offset;
+
+			// Rotation
+			XMVECTOR tangent = XMVector3Normalize(
+				ring.right * -sinf(angle) +
+				XMVector3Cross(ring.normal, ring.right) * cosf(angle)
+			);
+			XMVECTOR up = ring.normal;
+			XMVECTOR right = XMVector3Cross(up, tangent);
+
+			XMMATRIX rotMatrix = XMMatrixSet(
+				XMVectorGetX(right), XMVectorGetX(up), XMVectorGetX(tangent), 0,
+				XMVectorGetY(right), XMVectorGetY(up), XMVectorGetY(tangent), 0,
+				XMVectorGetZ(right), XMVectorGetZ(up), XMVectorGetZ(tangent), 0,
+				0, 0, 0, 1
+			);
+
+			XMVECTOR orientation = XMQuaternionRotationMatrix(rotMatrix);
+
+			BoundingOrientedBox box;
+			box.Center = { 0, 0, 0 };
+			box.Extents = XMFLOAT3(segmentWidth * 0.5f, segmentHeight * 0.5f, segmentDepth * 0.5f);
+			XMStoreFloat4(&box.Orientation, orientation);
+
+			BoundingOrientedBox transformedBox;
+			box.Transform(transformedBox, XMMatrixRotationQuaternion(orientation) * XMMatrixTranslationFromVector(segmentCenter));
+
+			float dist = 0.0f;
+			if (transformedBox.Intersects(rayOrigin, rayDirection, dist)) {
+				if (dist < closestDistance) {
+					closestDistance = dist;
+					closestRing = ring.id;
+				}
+			}
+		}
+	}
+
+	return closestRing; // RING_X, RING_Y, RING_Z, or RING_NONE
 }
 
 

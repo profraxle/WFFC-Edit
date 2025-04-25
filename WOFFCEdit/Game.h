@@ -83,6 +83,14 @@ public:
 		const DirectX::XMVECTOR& axisRight     // vector perpendicular to axisNormal for ring layout
 	);
 
+	int TestGizmoRingHitMulti(
+		const float ringRadius,
+		const float segmentWidth,
+		const float segmentHeight,
+		const float segmentDepth,
+		const int segmentCount
+	);
+
 	int m_SelectedIndex;
 
 	RECT m_ScreenDimensions;

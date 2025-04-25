@@ -399,7 +399,13 @@ void ToolMain::Tick(MSG *msg)
 		//store the selected object temporarily
 		int tempSelect = m_d3dRenderer.MousePicking();
 
-		int gizmoInteract = m_d3dRenderer.MouseInteractGizmo();
+		int gizmoInteract = -1;
+		if (transformState == GizmoType::ROTATE){
+			 gizmoInteract = m_d3dRenderer.TestGizmoRingHitMulti(1.f,0.05f,0.05f,0.05f,16);
+		}
+		else {
+			gizmoInteract = m_d3dRenderer.MouseInteractGizmo();
+		}
 
 		//if a different object is selected, update ID or deselect if same
 		if (tempSelect == m_selectedObject ) {
