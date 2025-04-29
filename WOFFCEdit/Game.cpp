@@ -306,12 +306,25 @@ void Game::Render()
 	context->RSSetState(m_states->CullNone());
 //	context->RSSetState(m_states->Wireframe());		//uncomment for wireframe
 
+
 	//Render the batch,  This is handled in the Display chunk becuase it has the potential to get complex
 	m_displayChunk.RenderBatch(m_deviceResources);
+
+
 
 	context->OMSetBlendState(m_states->AlphaBlend(), nullptr, 0xFFFFFFFF);
 	context->OMSetDepthStencilState(m_states->DepthNone(), 0);
 	context->RSSetState(m_states->CullNone());
+
+	XMVECTOR terrainCoords = FindMouseOnTerrain();
+	DrawCircle(terrainCoords, 10, 64);
+
+	if (mouseState.leftButton)
+	{
+		m_displayChunk.RaiseTerrainHeightAroundPoint(terrainCoords, 10, 1.f);
+		m_displayChunk.UpdateTerrain();
+		
+	}
 
 	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	//render gizmo if selected object
@@ -343,10 +356,14 @@ void Game::Render()
 				break;
 			}
 
+			XMVECTOR rotate2 = Quaternion::CreateFromYawPitchRoll(m_displayList[m_SelectedIndex].m_orientation.y * 3.1415 / 180,
+				m_displayList[m_SelectedIndex].m_orientation.x * 3.1415 / 180,
+				m_displayList[m_SelectedIndex].m_orientation.z * 3.1415 / 180);
+
+			XMVECTOR rotate3 = XMQuaternionMultiply(rotate, rotate2);
 
 
-
-			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
+			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate3, translate);
 
 
 
@@ -359,6 +376,8 @@ void Game::Render()
 
 		
 	}
+
+
 	m_deviceResources->PIXEndEvent();
 
     m_deviceResources->Present();
@@ -665,7 +684,7 @@ void Game::CreateDeviceDependentResources()
 	m_gizmoModels[1][1] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
 	m_gizmoModels[1][2] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
 
-	m_gizmoMode = 1;
+	m_gizmoMode = 0;
 
     // Load textures
     DX::ThrowIfFailed(
@@ -794,6 +813,24 @@ int Game::MouseInteractGizmo() {
 
 	float minDistance = 9999999;
 
+	int max = 0;
+	int min = 3;
+
+	switch (m_gizmoMode) {
+	case 0:
+		 max = 0;
+		min = 3;
+		break;
+	case 1:
+		max = 3;
+		min = 6;
+		break;
+	case 2:
+		max = 6;
+		min = 9;
+		break;
+	}
+
 	//setup near and far planes with mouse x and y
 	const XMVECTOR nearSource = XMVectorSet(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, 0.f, 1.f);
 	const XMVECTOR farSource = XMVectorSet(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, 1.f, 1.f);
@@ -802,7 +839,7 @@ int Game::MouseInteractGizmo() {
 	{
 		for (int i = 0; i < 3; i++) {
 
-			const XMVECTORF32 scale = { 4,2,4 };
+			const XMVECTORF32 scale = { 4,4,4 };
 			const XMVECTORF32 translate = { m_displayList[m_SelectedIndex].m_position.x,
 			m_displayList[m_SelectedIndex].m_position.y,m_displayList[m_SelectedIndex].m_position.z };
 
@@ -827,8 +864,14 @@ int Game::MouseInteractGizmo() {
 				break;
 			}
 
+			XMVECTOR rotate2 = Quaternion::CreateFromYawPitchRoll(m_displayList[m_SelectedIndex].m_orientation.y * 3.1415 / 180,
+				m_displayList[m_SelectedIndex].m_orientation.x * 3.1415 / 180,
+				m_displayList[m_SelectedIndex].m_orientation.z * 3.1415 / 180);
+
+			XMVECTOR rotate3 = XMQuaternionMultiply(rotate, rotate2);
+
 			//create set matrix of selected object in the world based on translation scale and rotation
-			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
+			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate3, translate);
 
 			//unproject the points on near and far plane
 			XMVECTOR nearPoint = XMVector3Unproject(nearSource, 0.f, 0.f,
@@ -849,6 +892,7 @@ int Game::MouseInteractGizmo() {
 
 					if (pickedDistance < minDistance) {
 						selectedID = i;
+						minDistance = pickedDistance;
 					}
 
 				}
@@ -994,151 +1038,150 @@ std::wstring StringToWCHART(std::string s)
 	return r;
 }
 
-int Game::TestGizmoRingHit(const XMVECTOR& rayOrigin,const XMVECTOR& rayDirection,const XMVECTOR& ringCenter,const float ringRadius,const float segmentWidth,const float segmentHeight,const float segmentDepth,const int segmentCount,const XMVECTOR& axisNormal, const XMVECTOR& axisRight){   // e.g. (0,0,1) for Z-up ring     // vector perpendicular to axisNormal for ring layout) {
 
 
 
-	int hitSegment = -1;
-	float closestDist = FLT_MAX;
 
-	for (int i = 0; i < segmentCount; ++i) {
-		float angle = XM_2PI * i / segmentCount;
+// Utility to get the world-space position of a heightmap point
+XMFLOAT3 Game::GetWorldPos(int x, int z, const BYTE* heightMap, float terrainSize, float heightScale, int resolution)
+{
+	float spacing = terrainSize / (float)(resolution - 1);
 
-		// Compute circle position
-		float x = cosf(angle);
-		float y = sinf(angle);
-		XMVECTOR offset = axisRight * x * ringRadius +
-			XMVector3Cross(axisNormal, axisRight) * y * ringRadius;
+	float worldX = x * spacing - terrainSize / 2.0f;
+	float worldZ = z * spacing - terrainSize / 2.0f;
 
-		XMVECTOR segmentCenter = ringCenter + offset;
+	// Heightmap value in [0, 255]
+	BYTE heightByte = heightMap[z * resolution + x];
+	float height = static_cast<float>(heightByte) / 255.0f * heightScale;
 
-		// Rotation to align box tangential to the ring
-		XMVECTOR tangent = XMVector3Normalize(
-			axisRight * -sinf(angle) +
-			XMVector3Cross(axisNormal, axisRight) * cosf(angle)
-		);
-		XMVECTOR up = axisNormal;
-		XMVECTOR right = XMVector3Cross(up, tangent);
-
-		XMMATRIX rotMatrix = XMMatrixSet(
-			XMVectorGetX(right), XMVectorGetX(up), XMVectorGetX(tangent), 0,
-			XMVectorGetY(right), XMVectorGetY(up), XMVectorGetY(tangent), 0,
-			XMVectorGetZ(right), XMVectorGetZ(up), XMVectorGetZ(tangent), 0,
-			0, 0, 0, 1
-		);
-
-		XMVECTOR orientation = XMQuaternionRotationMatrix(rotMatrix);
-
-		// Create OBB
-		BoundingOrientedBox box;
-		box.Center = { 0, 0, 0 };
-		box.Extents = XMFLOAT3(segmentWidth * 0.5f, segmentHeight * 0.5f, segmentDepth * 0.5f);
-		XMStoreFloat4(&box.Orientation, orientation);
-
-		// Transform OBB to world
-		BoundingOrientedBox transformedBox;
-		box.Transform(transformedBox, XMMatrixRotationQuaternion(orientation) * XMMatrixTranslationFromVector(segmentCenter));
-
-		// Ray test
-		float dist = 0.0f;
-		if (transformedBox.Intersects(rayOrigin, rayDirection, dist)) {
-			if (dist < closestDist) {
-				closestDist = dist;
-				hitSegment = i;
-			}
-		}
-	}
-
-	return hitSegment;
+	return DirectX::XMFLOAT3(worldX, height, worldZ);
 }
 
-int Game::TestGizmoRingHitMulti(
-	const float ringRadius,
-	const float segmentWidth,
-	const float segmentHeight,
-	const float segmentDepth,
-	const int segmentCount
-) {
-	struct RingInfo {
-		int id;
-		XMVECTOR normal;
-		XMVECTOR right;
-	};
-
-	int closestRing = -1;
-
-	RingInfo rings[3] = {
-		{ 2, XMVectorSet(1, 0, 0, 0), XMVectorSet(0, 0, 1, 0) }, // X ring (YZ plane)
-		{0, XMVectorSet(0, 1, 0, 0), XMVectorSet(1, 0, 0, 0) }, // Y ring (XZ plane)
-		{ 1, XMVectorSet(0, 0, 1, 0), XMVectorSet(1, 0, 0, 0) }  // Z ring (XY plane)
-	};
-
-	if (m_SelectedIndex != -1)
-	{
-
-	XMVECTOR rayOrigin, rayDirection;
+XMVECTOR Game::FindMouseOnTerrain()
+{
+	using namespace DirectX;
 
 	XMMATRIX viewM = m_view;
 	XMMATRIX projM = m_projection;
-	ScreenPointToRay(m_InputCommands.mouse_X, m_InputCommands.mouse_Y, viewM, projM, m_ScreenDimensions.right, m_ScreenDimensions.bottom, rayOrigin, rayDirection);
 
+	XMVECTOR mouseRayOrigin, mouseRayDir;
+	ScreenPointToRay(
+		m_InputCommands.mouse_X, m_InputCommands.mouse_Y,
+		viewM, projM,
+		m_ScreenDimensions.right, m_ScreenDimensions.bottom,
+		mouseRayOrigin, mouseRayDir);
 
+	const int resolution = TERRAINRESOLUTION;
+	float closestDist = FLT_MAX;
+	XMVECTOR closestHit = XMVectorZero();
 
+	for (int z = 0; z < resolution - 1; ++z) {
+		for (int x = 0; x < resolution - 1; ++x) {
 
-	const XMVECTORF32 ringCenter = { m_displayList[m_SelectedIndex].m_position.x,
-			m_displayList[m_SelectedIndex].m_position.y,m_displayList[m_SelectedIndex].m_position.z };
+			// Extract vertex positions from VertexPositionNormalTexture
+			XMVECTOR v0 = XMLoadFloat3(&m_displayChunk.GetVertex(x, z).position);
+			XMVECTOR v1 = XMLoadFloat3(&m_displayChunk.GetVertex(x + 1, z).position);
+			XMVECTOR v2 = XMLoadFloat3(&m_displayChunk.GetVertex(x, z + 1).position);
+			XMVECTOR v3 = XMLoadFloat3(&m_displayChunk.GetVertex(x + 1, z + 1).position);
 
-	
-	float closestDistance = FLT_MAX;
+			// First triangle
+			float dist1;
+			if (TriangleTests::Intersects(mouseRayOrigin, mouseRayDir, v0, v1, v2, dist1)) {
+				if (dist1 < closestDist) {
+					closestDist = dist1;
+					closestHit = XMVectorAdd(mouseRayOrigin, XMVectorScale(mouseRayDir, dist1));
+				}
+			}
 
-	for (const auto& ring : rings) {
-		for (int i = 0; i < segmentCount; ++i) {
-			float angle = XM_2PI * i / segmentCount;
-
-			float x = cosf(angle);
-			float y = sinf(angle);
-
-			XMVECTOR offset = ring.right * x * ringRadius +
-				XMVector3Cross(ring.normal, ring.right) * y * ringRadius;
-			XMVECTOR segmentCenter = ringCenter + offset;
-
-			// Rotation
-			XMVECTOR tangent = XMVector3Normalize(
-				ring.right * -sinf(angle) +
-				XMVector3Cross(ring.normal, ring.right) * cosf(angle)
-			);
-			XMVECTOR up = ring.normal;
-			XMVECTOR right = XMVector3Cross(up, tangent);
-
-			XMMATRIX rotMatrix = XMMatrixSet(
-				XMVectorGetX(right), XMVectorGetX(up), XMVectorGetX(tangent), 0,
-				XMVectorGetY(right), XMVectorGetY(up), XMVectorGetY(tangent), 0,
-				XMVectorGetZ(right), XMVectorGetZ(up), XMVectorGetZ(tangent), 0,
-				0, 0, 0, 1
-			);
-
-			XMVECTOR orientation = XMQuaternionRotationMatrix(rotMatrix);
-
-			BoundingOrientedBox box;
-			box.Center = { 0, 0, 0 };
-			box.Extents = XMFLOAT3(segmentWidth * 0.5f, segmentHeight * 0.5f, segmentDepth * 0.5f);
-			XMStoreFloat4(&box.Orientation, orientation);
-
-			BoundingOrientedBox transformedBox;
-			box.Transform(transformedBox, XMMatrixRotationQuaternion(orientation) * XMMatrixTranslationFromVector(segmentCenter));
-
-			float dist = 0.0f;
-			if (transformedBox.Intersects(rayOrigin, rayDirection, dist)) {
-				if (dist < closestDistance) {
-					closestDistance = dist;
-					closestRing = ring.id;
+			// Second triangle
+			float dist2;
+			if (TriangleTests::Intersects(mouseRayOrigin, mouseRayDir, v2, v1, v3, dist2)) {
+				if (dist2 < closestDist) {
+					closestDist = dist2;
+					closestHit = XMVectorAdd(mouseRayOrigin, XMVectorScale(mouseRayDir, dist2));
 				}
 			}
 		}
 	}
+
+	return closestHit;
+}
+void Game::DrawCircle(DirectX::FXMVECTOR center, float radius, int segments)
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+
+	context->IASetInputLayout(m_batchInputLayout.Get());
+	m_batchEffect->Apply(context);
+	m_batch->Begin();
+
+	float cx = XMVectorGetX(center);
+	float cz = XMVectorGetZ(center);
+
+	float terrainSize = m_displayChunk.m_terrainSize;
+	int terrainRes = TERRAINRESOLUTION;
+
+	float angleStep = XM_2PI / segments;
+	Vector3 prevPoint;
+
+	for (int i = 0; i <= segments; ++i)
+	{
+		float angle = i * angleStep;
+		float x = cx + radius * cosf(angle);
+		float z = cz + radius * sinf(angle);
+
+		// Convert world x/z to heightmap indices (u, v in heightmap space)
+		int ix = static_cast<int>((x + terrainSize / 2.0f) / m_displayChunk.m_terrainPositionScalingFactor);
+		int iz = static_cast<int>((z + terrainSize / 2.0f) / m_displayChunk.m_terrainPositionScalingFactor);
+
+		ix = std::clamp(ix, 0, terrainRes - 1);
+		iz = std::clamp(iz, 0, terrainRes - 1);
+
+		// Use bilinear interpolation for more accurate height
+		float height = SampleHeightBilinear(x, z);
+
+		Vector3 currPoint = Vector3(x, height, z);
+
+		if (i > 0)
+		{
+			m_batch->DrawLine(VertexPositionColor(prevPoint, Colors::Red),
+				VertexPositionColor(currPoint, Colors::Red));
+		}
+
+		prevPoint = currPoint;
 	}
 
-	return closestRing; // RING_X, RING_Y, RING_Z, or RING_NONE
+	m_batch->End();
 }
 
+float Game::SampleHeightBilinear(float x, float z)
+{
+	int width = TERRAINRESOLUTION;
+	int height = TERRAINRESOLUTION;
+	float scale = m_displayChunk.m_terrainHeightScale;
 
+	// Convert world space (x, z) to heightmap space (u, v)
+	float halfSize = m_displayChunk.m_terrainSize / 2.0f;
+	float u = (x + halfSize) / m_displayChunk.m_terrainSize * width;
+	float v = (z + halfSize) / m_displayChunk.m_terrainSize * height;
+
+	int x0 = static_cast<int>(floorf(u));
+	int z0 = static_cast<int>(floorf(v));
+	int x1 = std::min(x0 + 1, width - 1);
+	int z1 = std::min(z0 + 1, height - 1);
+
+	float s = u - x0;
+	float t = v - z0;
+
+	auto getHeight = [&](int x, int z) {
+		return static_cast<float>(m_displayChunk.m_heightMap[x + z * width]) * scale;
+		};
+
+	float h00 = getHeight(x0, z0);
+	float h10 = getHeight(x1, z0);
+	float h01 = getHeight(x0, z1);
+	float h11 = getHeight(x1, z1);
+
+	float h0 = h00 * (1 - s) + h10 * s;
+	float h1 = h01 * (1 - s) + h11 * s;
+	return h0 * (1 - t) + h1 * t;
+}

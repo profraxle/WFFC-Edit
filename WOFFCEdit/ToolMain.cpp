@@ -26,7 +26,7 @@ ToolMain::ToolMain()
 
 	m_selectedGizmo = -1;
 
-	transformState = GizmoType::ROTATE;
+	transformState = GizmoType::TRANSLATE;
 }
 
 
@@ -303,94 +303,14 @@ void ToolMain::Tick(MSG *msg)
 
 
 	if (m_toolInputCommands.mouse_LB_Down) {
-		if (m_selectedGizmo != -1 && m_selectedObject != -1) {
-
-
-			point1 = point2;
-			
-
-			DirectX::XMVECTOR axis;
-
-			if (m_selectedGizmo == 0) {
-				axis = DirectX::XMVectorSet(0,1,0,1);
-			}
-			if (m_selectedGizmo == 1) {
-				axis = DirectX::XMVectorSet(0, 0, 1, 1);
-
-			}
-			if (m_selectedGizmo == 2) {
-				axis = DirectX::XMVectorSet(1, 0, 0, 1);
-			}
-
-
-			switch (transformState) {
-				case GizmoType::TRANSLATE:
-					point2 = m_d3dRenderer.DragGizmo(axis);
-					break;
-				case GizmoType::ROTATE:
-					point2 = m_d3dRenderer.DragRotGizmo(axis);
-					break;
-			}
-
-			if (DirectX::XMVectorGetX(point1) != 0 && DirectX::XMVectorGetY(point1) != 0, DirectX::XMVectorGetZ(point1) != 0) {
-				if (DirectX::XMVectorGetX(point2) != 0 && DirectX::XMVectorGetY(point2) != 0, DirectX::XMVectorGetZ(point2) != 0) {
-					DirectX::XMVECTOR diff = DirectX::XMVectorSubtract(point2, point1);
-
-					switch (transformState) {
-
-						case GizmoType::TRANSLATE:
-							if (m_selectedGizmo == 0) {
-								m_sceneGraph[m_selectedObject].posY += DirectX::XMVectorGetY(diff);
-							}
-							if (m_selectedGizmo == 1) {
-								m_sceneGraph[m_selectedObject].posZ += DirectX::XMVectorGetZ(diff);
-
-							}
-							if (m_selectedGizmo == 2) {
-								m_sceneGraph[m_selectedObject].posX += DirectX::XMVectorGetX(diff);
-							}
-							break;
-						case GizmoType::SCALE:
-							if (m_selectedGizmo == 0) {
-								m_sceneGraph[m_selectedObject].scaY += DirectX::XMVectorGetY(diff);
-							}
-							if (m_selectedGizmo == 1) {
-								m_sceneGraph[m_selectedObject].scaZ += DirectX::XMVectorGetZ(diff);
-
-							}
-							if (m_selectedGizmo == 2) {
-								m_sceneGraph[m_selectedObject].scaX -= DirectX::XMVectorGetX(diff);
-							}
-							break;
-						case GizmoType::ROTATE:
-
-							float angle = m_d3dRenderer.GetAngleDiff(point2,point1,axis);
-
-							if (std::isfinite(angle)) {
-
-								if (m_selectedGizmo == 0) {
-									m_sceneGraph[m_selectedObject].rotY += angle;
-								}
-								if (m_selectedGizmo == 1) {
-									m_sceneGraph[m_selectedObject].rotZ += angle;
-
-								}
-								if (m_selectedGizmo == 2) {
-									m_sceneGraph[m_selectedObject].rotX += angle;
-								}
-							}
-
-							break;
-					}
-					
-
-					
-
-					m_d3dRenderer.UpdateDisplayList(&m_sceneGraph);
-				}
-			}
+		switch (toolState) {
+		case ToolState::GIZMO:
+				HandleGizmos();
+				break;
+		case ToolState::TERRAIN:
+				HandleTerrain();
+				break;
 		}
-
 	}
 
 	if (canSelect) {
@@ -400,12 +320,7 @@ void ToolMain::Tick(MSG *msg)
 		int tempSelect = m_d3dRenderer.MousePicking();
 
 		int gizmoInteract = -1;
-		if (transformState == GizmoType::ROTATE){
-			 gizmoInteract = m_d3dRenderer.TestGizmoRingHitMulti(1.f,0.05f,0.05f,0.05f,160);
-		}
-		else {
-			gizmoInteract = m_d3dRenderer.MouseInteractGizmo();
-		}
+		gizmoInteract = m_d3dRenderer.MouseInteractGizmo();
 
 		//if a different object is selected, update ID or deselect if same
 		if (tempSelect == m_selectedObject ) {
@@ -631,5 +546,103 @@ void ToolMain::UpdateInput(MSG* msg)
 		m_toolInputCommands.deleteObject = false;
 	}
 	//rotation
+
+}
+
+
+void ToolMain::HandleGizmos() {
+	if (m_selectedGizmo != -1 && m_selectedObject != -1) {
+
+
+		point1 = point2;
+
+		DirectX::XMVECTOR axis;
+		DirectX::XMVECTOR axis2;
+		DirectX::XMVECTOR quat = DirectX::XMQuaternionRotationRollPitchYaw(m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
+
+		if (m_selectedGizmo == 0) {
+			axis = DirectX::XMVectorSet(0, 1, 0, 0);
+
+		}
+		if (m_selectedGizmo == 1) {
+			axis = DirectX::XMVectorSet(0, 0, 1, 0);
+		}
+		if (m_selectedGizmo == 2) {
+			axis = DirectX::XMVectorSet(1, 0, 0, 0);
+		}
+		axis2 = DirectX::XMVector3Rotate(axis, quat);
+
+		switch (transformState) {
+		case GizmoType::TRANSLATE:
+			point2 = m_d3dRenderer.DragGizmo(axis);
+			break;
+		case GizmoType::ROTATE:
+			point2 = m_d3dRenderer.DragRotGizmo(axis);
+			break;
+		}
+
+		if (DirectX::XMVectorGetX(point1) != 0 && DirectX::XMVectorGetY(point1) != 0, DirectX::XMVectorGetZ(point1) != 0) {
+			if (DirectX::XMVectorGetX(point2) != 0 && DirectX::XMVectorGetY(point2) != 0, DirectX::XMVectorGetZ(point2) != 0) {
+				DirectX::XMVECTOR diff = DirectX::XMVectorSubtract(point2, point1);
+
+				switch (transformState) {
+
+				case GizmoType::TRANSLATE:
+					if (m_selectedGizmo == 0) {
+						m_sceneGraph[m_selectedObject].posY += DirectX::XMVectorGetY(diff);
+					}
+					if (m_selectedGizmo == 1) {
+						m_sceneGraph[m_selectedObject].posZ += DirectX::XMVectorGetZ(diff);
+
+					}
+					if (m_selectedGizmo == 2) {
+						m_sceneGraph[m_selectedObject].posX += DirectX::XMVectorGetX(diff);
+					}
+					break;
+				case GizmoType::SCALE:
+					if (m_selectedGizmo == 0) {
+						m_sceneGraph[m_selectedObject].scaY += DirectX::XMVectorGetY(diff);
+					}
+					if (m_selectedGizmo == 1) {
+						m_sceneGraph[m_selectedObject].scaZ += DirectX::XMVectorGetZ(diff);
+
+					}
+					if (m_selectedGizmo == 2) {
+						m_sceneGraph[m_selectedObject].scaX -= DirectX::XMVectorGetX(diff);
+					}
+					break;
+				case GizmoType::ROTATE:
+
+					float angle = m_d3dRenderer.GetAngleDiff(point2, point1, axis2);
+
+					if (std::isfinite(angle)) {
+
+						if (m_selectedGizmo == 0) {
+							m_sceneGraph[m_selectedObject].rotY += angle;
+						}
+						if (m_selectedGizmo == 1) {
+							m_sceneGraph[m_selectedObject].rotZ += angle;
+
+						}
+						if (m_selectedGizmo == 2) {
+							m_sceneGraph[m_selectedObject].rotX += angle;
+						}
+					}
+
+					break;
+				}
+
+
+
+
+				m_d3dRenderer.UpdateDisplayList(&m_sceneGraph);
+			}
+		}
+	}
+
+}
+
+void HandleTerrain() 
+{
 
 }

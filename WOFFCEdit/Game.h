@@ -70,26 +70,22 @@ public:
 	DirectX::XMVECTOR DragGizmo(DirectX::XMVECTOR axisDir);
 	DirectX::XMVECTOR DragRotGizmo(DirectX::XMVECTOR rotateAxis);
 
-	int TestGizmoRingHit(
-		const DirectX::XMVECTOR& rayOrigin,
-		const DirectX::XMVECTOR& rayDirection,
-		const DirectX::XMVECTOR& ringCenter,
-		const float ringRadius,
-		const float segmentWidth,
-		const float segmentHeight,
-		const float segmentDepth,
-		const int segmentCount,
-		const DirectX::XMVECTOR& axisNormal,   // e.g. (0,0,1) for Z-up ring
-		const DirectX::XMVECTOR& axisRight     // vector perpendicular to axisNormal for ring layout
-	);
+	void DrawCircleOnTerrain(std::shared_ptr<DX::DeviceResources> deviceResources, const DirectX::SimpleMath::Vector3& center, float radius, float thickness, const DirectX::SimpleMath::Vector4& color);
 
-	int TestGizmoRingHitMulti(
-		const float ringRadius,
-		const float segmentWidth,
-		const float segmentHeight,
-		const float segmentDepth,
-		const int segmentCount
-	);
+	float SampleHeightmap(float x, float z, float terrainSize, float terrainHeightScale, int heightmapWidth, int heightmapHeight);
+
+	float SampleHeightBilinear(float x, float z);
+
+	bool IntersectTriangle(const DirectX::XMVECTOR& rayOrigin, const DirectX::XMVECTOR& rayDir,
+		const DirectX::XMVECTOR& v0, const DirectX::XMVECTOR& v1, const DirectX::XMVECTOR& v2,
+		float& outDist);
+
+	// Utility to get the world-space position of a heightmap point
+	DirectX::XMFLOAT3 GetWorldPos(int x, int z, const BYTE* heightMap, float terrainSize, float heightScale, int resolution);
+
+	DirectX::XMVECTOR FindMouseOnTerrain();
+
+	void DrawCircle(DirectX::FXMVECTOR center, float radius, int segments);
 
 	int m_SelectedIndex;
 

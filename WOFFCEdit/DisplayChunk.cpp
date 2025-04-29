@@ -211,3 +211,40 @@ void DisplayChunk::CalculateTerrainNormals()
 		}
 	}
 }
+const DirectX::VertexPositionNormalTexture& DisplayChunk::GetVertex(int x, int y)
+{
+	return m_terrainGeometry[x][y];
+}
+
+void DisplayChunk::RaiseTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius, float heightDelta)
+{
+	using namespace DirectX;
+
+	const int resolution = TERRAINRESOLUTION;
+
+	float cx = XMVectorGetX(center);
+	float cz = XMVectorGetZ(center);
+
+	for (int z = 0; z < resolution; ++z)
+	{
+		for (int x = 0; x < resolution; ++x)
+		{
+			// Convert grid index to world position
+			float worldX = (x * m_terrainPositionScalingFactor) - m_terrainSize / 2.0f;
+			float worldZ = (z * m_terrainPositionScalingFactor) - m_terrainSize / 2.0f;
+
+			float dx = worldX - cx;
+			float dz = worldZ - cz;
+
+			if ((dx * dx + dz * dz) <= radius * radius)
+			{
+				int index = x + z * resolution;
+				BYTE& height = m_heightMap[index];
+
+				int newHeight = static_cast<int>(height) + static_cast<int>(heightDelta / m_terrainHeightScale);
+				height = static_cast<BYTE>(std::clamp(newHeight, 0, 255));
+			}
+		}
+	}
+
+}

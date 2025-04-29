@@ -23,17 +23,25 @@ public:
 
 	ID3D11ShaderResourceView *					m_texture_diffuse;				//diffuse texture
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>   m_terrainInputLayout;
+	int		m_terrainSize;				//size of terrain in metres
+	BYTE m_heightMap[TERRAINRESOLUTION * TERRAINRESOLUTION];
+	float	m_terrainHeightScale;
 
+	float   m_terrainPositionScalingFactor;
+
+	const DirectX::VertexPositionNormalTexture& GetVertex(int x, int y);
+
+	void RaiseTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius, float heightDelta);
 private:
 	
 	DirectX::VertexPositionNormalTexture m_terrainGeometry[TERRAINRESOLUTION][TERRAINRESOLUTION];
-	BYTE m_heightMap[TERRAINRESOLUTION*TERRAINRESOLUTION];
+
 	void CalculateTerrainNormals();
 
-	float	m_terrainHeightScale;
-	int		m_terrainSize;				//size of terrain in metres
+	
+	
 	float	m_textureCoordStep;			//step in texture coordinates between each vertex row / column
-	float   m_terrainPositionScalingFactor;	//factor we multiply the position by to convert it from its native resolution( 0- Terrain Resolution) to full scale size in metres dictated by m_Terrainsize
+	//factor we multiply the position by to convert it from its native resolution( 0- Terrain Resolution) to full scale size in metres dictated by m_Terrainsize
 	
 	std::string m_name;
 	int m_chunk_x_size_metres;

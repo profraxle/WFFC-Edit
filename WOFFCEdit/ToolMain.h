@@ -55,6 +55,10 @@ public:	//variables
 	std::stack<std::vector<SceneObject>> futureHistory;
 	void UpdateFutureHistory();
 
+	void HandleGizmos();
+	void HandleTerrain();
+
+
 private:	//methods
 	void	onContentAdded();
 
@@ -74,6 +78,8 @@ private:	//variables
 	
 
 	MFCMain * m_MFCMain;
+	ToolState toolState;
+
 
 public:
 	void SetMFCMain(MFCMain* n_MFCMain);
@@ -86,4 +92,10 @@ enum GizmoType
 	ROTATE,
 	SCALE,
 	NONE
+};
+
+enum ToolState
+{
+	TERRAIN,
+	GIZMO
 };
