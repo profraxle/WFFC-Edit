@@ -32,6 +32,9 @@ public:
 	const DirectX::VertexPositionNormalTexture& GetVertex(int x, int y);
 
 	void RaiseTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius, float heightDelta);
+	void FlattenTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius);
+
+	void SmoothTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius);
 private:
 	
 	DirectX::VertexPositionNormalTexture m_terrainGeometry[TERRAINRESOLUTION][TERRAINRESOLUTION];

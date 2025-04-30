@@ -8,6 +8,7 @@
 #include <string>
 #include <Windows.h>
 #include <iostream>
+#include "enums.h"
 
 
 using namespace DirectX;
@@ -57,6 +58,7 @@ Game::Game()
 
 	m_SelectedIndex = 0;
 
+	m_terrainRadius = 10.f;
 }
 
 Game::~Game()
@@ -200,6 +202,26 @@ void Game::Update(DX::StepTimer const& timer)
 		m_camPosition -= m_camRight*m_movespeed;
 	}
 
+	switch (m_toolState) {
+	case ToolState::GIZMO:
+		break;
+	case ToolState::TERRAIN:
+
+		if (m_mouse->GetState().scrollWheelValue != 0) {
+
+			m_terrainRadius += m_mouse.get()->GetState().scrollWheelValue / 120.f;
+
+			m_terrainRadius = std::clamp(m_terrainRadius, 1.f, 50.0f);
+			m_mouse->ResetScrollWheelValue();
+		}
+
+
+		m_terrainCoords = FindMouseOnTerrain();
+		break;
+	}
+
+	
+
 
 
 
@@ -316,66 +338,75 @@ void Game::Render()
 	context->OMSetDepthStencilState(m_states->DepthNone(), 0);
 	context->RSSetState(m_states->CullNone());
 
-	XMVECTOR terrainCoords = FindMouseOnTerrain();
-	DrawCircle(terrainCoords, 10, 64);
-
-	if (mouseState.leftButton)
+	
+	
+	
+	switch (m_toolState)
 	{
-		m_displayChunk.RaiseTerrainHeightAroundPoint(terrainCoords, 10, 1.f);
-		m_displayChunk.UpdateTerrain();
+	case ToolState::TERRAIN:
 		
-	}
+		DrawCircle(m_terrainCoords, m_terrainRadius, 64);
+		break;
+	case ToolState::GIZMO:
 
-	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	//render gizmo if selected object
-	if (m_SelectedIndex != -1) {
-		m_deviceResources->PIXBeginEvent(L"Draw model");
-		const XMVECTORF32 scale = { 4, 4, 4 };
-		const XMVECTORF32 translate = { m_displayList[m_SelectedIndex].m_position.x, m_displayList[m_SelectedIndex].m_position.y, m_displayList[m_SelectedIndex].m_position.z };
+		context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+		//render gizmo if selected object
+		if (m_SelectedIndex != -1) {
+			m_deviceResources->PIXBeginEvent(L"Draw model");
+			const XMVECTORF32 scale = { 4, 4, 4 };
+			const XMVECTORF32 translate = { m_displayList[m_SelectedIndex].m_position.x, m_displayList[m_SelectedIndex].m_position.y, m_displayList[m_SelectedIndex].m_position.z };
 
-		for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 3; i++) {
 
 
-			XMVECTOR rotate;
-			switch (i) {
-			case 0:
-				// convert degrees into radians for rotation matrix
-				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
-					0 * 3.1415 / 180,
-					0 * 3.1415 / 180);
-				break;
-			case 1:
-				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
-					90 * 3.1415 / 180,
-					0 * 3.1415 / 180);
-				break;
-			case 2:
-				rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
-					90 * 3.1415 / 180,
-					90 * 3.1415 / 180);
-				break;
+				XMVECTOR rotate;
+				switch (i) {
+				case 0:
+					// convert degrees into radians for rotation matrix
+					rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+						0 * 3.1415 / 180,
+						0 * 3.1415 / 180);
+					break;
+				case 1:
+					rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+						90 * 3.1415 / 180,
+						0 * 3.1415 / 180);
+					break;
+				case 2:
+					rotate = Quaternion::CreateFromYawPitchRoll(0 * 3.1415 / 180,
+						90 * 3.1415 / 180,
+						90 * 3.1415 / 180);
+					break;
+				}
+
+				XMVECTOR rotate2 = Quaternion::CreateFromYawPitchRoll(m_displayList[m_SelectedIndex].m_orientation.y * 3.1415 / 180,
+					m_displayList[m_SelectedIndex].m_orientation.x * 3.1415 / 180,
+					m_displayList[m_SelectedIndex].m_orientation.z * 3.1415 / 180);
+
+				XMVECTOR rotate3 = XMQuaternionIdentity();
+				if (m_gizmoState == GizmoState::ROTATE) {
+					rotate3 = XMQuaternionMultiply(rotate, rotate2);
+				}
+				else {
+					rotate3 = rotate;
+				}
+
+				XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate3, translate);
+
+
+				m_gizmoModels[m_gizmoState][i]->Draw(context, *m_states, local, m_view, m_projection);
+
+				context->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
+				context->OMSetDepthStencilState(m_states->DepthDefault(), 0);
 			}
 
-			XMVECTOR rotate2 = Quaternion::CreateFromYawPitchRoll(m_displayList[m_SelectedIndex].m_orientation.y * 3.1415 / 180,
-				m_displayList[m_SelectedIndex].m_orientation.x * 3.1415 / 180,
-				m_displayList[m_SelectedIndex].m_orientation.z * 3.1415 / 180);
 
-			XMVECTOR rotate3 = XMQuaternionMultiply(rotate, rotate2);
-
-
-			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate3, translate);
-
-
-
-			
-			m_gizmoModels[m_gizmoMode][i]->Draw(context, *m_states, local, m_view, m_projection);
-
-			context->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
-			context->OMSetDepthStencilState(m_states->DepthDefault(), 0);
 		}
 
-		
+		break;
 	}
+
+	
 
 
 	m_deviceResources->PIXEndEvent();
@@ -684,8 +715,6 @@ void Game::CreateDeviceDependentResources()
 	m_gizmoModels[1][1] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
 	m_gizmoModels[1][2] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
 
-	m_gizmoMode = 0;
-
     // Load textures
     DX::ThrowIfFailed(
         CreateDDSTextureFromFile(device, L"seafloor.dds", nullptr, m_texture1.ReleaseAndGetAddressOf())
@@ -816,7 +845,7 @@ int Game::MouseInteractGizmo() {
 	int max = 0;
 	int min = 3;
 
-	switch (m_gizmoMode) {
+	switch (m_gizmoState) {
 	case 0:
 		 max = 0;
 		min = 3;
@@ -868,7 +897,13 @@ int Game::MouseInteractGizmo() {
 				m_displayList[m_SelectedIndex].m_orientation.x * 3.1415 / 180,
 				m_displayList[m_SelectedIndex].m_orientation.z * 3.1415 / 180);
 
-			XMVECTOR rotate3 = XMQuaternionMultiply(rotate, rotate2);
+			XMVECTOR rotate3 = XMQuaternionIdentity();
+			if (m_gizmoState == GizmoState::ROTATE) {
+				rotate3 = XMQuaternionMultiply(rotate, rotate2);
+			}
+			else {
+				rotate3 = rotate;
+			}
 
 			//create set matrix of selected object in the world based on translation scale and rotation
 			XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate3, translate);
@@ -887,8 +922,8 @@ int Game::MouseInteractGizmo() {
 			XMVECTOR pickingVector = farPoint - nearPoint;
 			pickingVector = XMVector3Normalize(pickingVector);
 
-			for (int y = 0; y < m_gizmoModels[m_gizmoMode][i].get()->meshes.size(); y++) {
-				if (m_gizmoModels[m_gizmoMode][i].get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
+			for (int y = 0; y < m_gizmoModels[m_gizmoState][i].get()->meshes.size(); y++) {
+				if (m_gizmoModels[m_gizmoState][i].get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
 
 					if (pickedDistance < minDistance) {
 						selectedID = i;
@@ -1040,8 +1075,6 @@ std::wstring StringToWCHART(std::string s)
 
 
 
-
-
 // Utility to get the world-space position of a heightmap point
 XMFLOAT3 Game::GetWorldPos(int x, int z, const BYTE* heightMap, float terrainSize, float heightScale, int resolution)
 {
@@ -1137,7 +1170,7 @@ void Game::DrawCircle(DirectX::FXMVECTOR center, float radius, int segments)
 		iz = std::clamp(iz, 0, terrainRes - 1);
 
 		// Use bilinear interpolation for more accurate height
-		float height = SampleHeightBilinear(x, z);
+		float height = SampleHeightmapWithInterpolation(x, z);
 
 		Vector3 currPoint = Vector3(x, height, z);
 
@@ -1153,8 +1186,10 @@ void Game::DrawCircle(DirectX::FXMVECTOR center, float radius, int segments)
 	m_batch->End();
 }
 
-float Game::SampleHeightBilinear(float x, float z)
+// Sample the heightmap using bilinear interpolation
+float Game::SampleHeightmapWithInterpolation(float x, float z)
 {
+	//get the heighmap resolution and the height scaling factor
 	int width = TERRAINRESOLUTION;
 	int height = TERRAINRESOLUTION;
 	float scale = m_displayChunk.m_terrainHeightScale;
@@ -1164,24 +1199,62 @@ float Game::SampleHeightBilinear(float x, float z)
 	float u = (x + halfSize) / m_displayChunk.m_terrainSize * width;
 	float v = (z + halfSize) / m_displayChunk.m_terrainSize * height;
 
+	//cast the x and z values to be integers for use with sampling the heightmap
 	int x0 = static_cast<int>(floorf(u));
 	int z0 = static_cast<int>(floorf(v));
 	int x1 = std::min(x0 + 1, width - 1);
 	int z1 = std::min(z0 + 1, height - 1);
 
+	//calculate the fractional parts of the coordinates
 	float s = u - x0;
 	float t = v - z0;
 
+	//lambda function declaration to sample the height in the heightmap
 	auto getHeight = [&](int x, int z) {
 		return static_cast<float>(m_displayChunk.m_heightMap[x + z * width]) * scale;
 		};
 
+	//get the heights at the four corners of the square
 	float h00 = getHeight(x0, z0);
 	float h10 = getHeight(x1, z0);
 	float h01 = getHeight(x0, z1);
 	float h11 = getHeight(x1, z1);
 
+	// Perform bilinear interpolation
 	float h0 = h00 * (1 - s) + h10 * s;
 	float h1 = h01 * (1 - s) + h11 * s;
 	return h0 * (1 - t) + h1 * t;
+}
+
+
+// Function to raise terrain height around a point
+void Game::TerrainRaiseLower()
+{
+
+	m_displayChunk.RaiseTerrainHeightAroundPoint(m_terrainCoords, m_terrainRadius,0.5f);
+	m_displayChunk.UpdateTerrain();
+}
+
+void Game::TerrainFlatten ()
+{
+
+	m_displayChunk.FlattenTerrainHeightAroundPoint(m_terrainCoords, m_terrainRadius);
+	m_displayChunk.UpdateTerrain();
+}
+
+void Game::TerrainSmooth()
+{
+
+	m_displayChunk.SmoothTerrainHeightAroundPoint(m_terrainCoords, m_terrainRadius);
+	m_displayChunk.UpdateTerrain();
+}
+
+void Game::SetGizmoState(int nGizmoState)
+{
+	m_gizmoState = nGizmoState;
+}
+
+void Game::SetToolState(int nToolState)
+{
+	m_toolState= nToolState;
 }

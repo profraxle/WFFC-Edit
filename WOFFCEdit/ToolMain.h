@@ -9,6 +9,7 @@
 #include <vector>
 #include <stack>
 
+
 class MFCMain;
 
 class ToolMain
@@ -43,7 +44,9 @@ public:	//variables
 
 	std::vector<int> registeredIDs;
 
-	int transformState;
+	int m_gizmoState;
+	int m_toolState;
+	int m_TerrainState;
 
 	SceneObject copyObject;
 
@@ -78,7 +81,6 @@ private:	//variables
 	
 
 	MFCMain * m_MFCMain;
-	ToolState toolState;
 
 
 public:
@@ -86,16 +88,3 @@ public:
 	
 };
 
-enum GizmoType
-{
-	TRANSLATE,
-	ROTATE,
-	SCALE,
-	NONE
-};
-
-enum ToolState
-{
-	TERRAIN,
-	GIZMO
-};

@@ -114,6 +114,7 @@
     <ClInclude Include="UndoRedoDialogue.h">
       <Filter>MFC</Filter>
     </ClInclude>
+    <ClInclude Include="Enums.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

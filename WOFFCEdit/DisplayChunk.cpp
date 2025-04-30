@@ -218,7 +218,6 @@ const DirectX::VertexPositionNormalTexture& DisplayChunk::GetVertex(int x, int y
 
 void DisplayChunk::RaiseTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius, float heightDelta)
 {
-	using namespace DirectX;
 
 	const int resolution = TERRAINRESOLUTION;
 
@@ -243,6 +242,133 @@ void DisplayChunk::RaiseTerrainHeightAroundPoint(const DirectX::XMVECTOR& center
 
 				int newHeight = static_cast<int>(height) + static_cast<int>(heightDelta / m_terrainHeightScale);
 				height = static_cast<BYTE>(std::clamp(newHeight, 0, 255));
+			}
+		}
+	}
+
+}
+
+void DisplayChunk::FlattenTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius)
+{
+
+
+	const int resolution = TERRAINRESOLUTION;
+
+	float cx = XMVectorGetX(center);
+	float cz = XMVectorGetZ(center);
+
+
+	int centerX = static_cast<int>((cx + m_terrainSize / 2.0f) / m_terrainPositionScalingFactor);
+	int centerZ = static_cast<int>((cz + m_terrainSize / 2.0f) / m_terrainPositionScalingFactor);
+
+	// Clamp to ensure it's within bounds
+	centerX = std::clamp(centerX, 0, resolution - 1);
+	centerZ = std::clamp(centerZ, 0, resolution - 1);
+
+	int centreIndex = centerX + centerZ * resolution;
+
+	BYTE cHeight = m_heightMap[centreIndex];
+
+	
+
+	for (int z = 0; z < resolution; ++z)
+	{
+		for (int x = 0; x < resolution; ++x)
+		{
+			// Convert grid index to world position
+			float worldX = (x * m_terrainPositionScalingFactor) - m_terrainSize / 2.0f;
+			float worldZ = (z * m_terrainPositionScalingFactor) - m_terrainSize / 2.0f;
+
+			float dx = worldX - cx;
+			float dz = worldZ - cz;
+
+			if ((dx * dx + dz * dz) <= radius * radius)
+			{
+				int index = x + z * resolution;
+
+				if (index != centreIndex) {
+					m_heightMap[index] = cHeight;
+				}
+			}
+		}
+	}
+
+}
+
+void DisplayChunk::SmoothTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius)
+{
+
+
+	const int resolution = TERRAINRESOLUTION;
+
+	float cx = XMVectorGetX(center);
+	float cz = XMVectorGetZ(center);
+
+
+	int centerX = static_cast<int>((cx + m_terrainSize / 2.0f) / m_terrainPositionScalingFactor);
+	int centerZ = static_cast<int>((cz + m_terrainSize / 2.0f) / m_terrainPositionScalingFactor);
+
+	// Clamp to ensure it's within bounds
+	centerX = std::clamp(centerX, 0, resolution - 1);
+	centerZ = std::clamp(centerZ, 0, resolution - 1);
+
+	int centreIndex = centerX + centerZ * resolution;
+
+	
+	int count = 0;
+
+	float average = 0;
+
+	for (int z = 0; z < resolution; ++z)
+	{
+		for (int x = 0; x < resolution; ++x)
+		{
+			float worldX = (x * m_terrainPositionScalingFactor) - m_terrainSize / 2.0f;
+			float worldZ = (z * m_terrainPositionScalingFactor) - m_terrainSize / 2.0f;
+
+			float dx = worldX - cx;
+			float dz = worldZ - cz;
+
+			if ((dx * dx + dz * dz) <= radius * radius)
+			{
+				int index = x + z * resolution;
+				average += static_cast<float>(m_heightMap[index]);
+				count++;
+			}
+		}
+	}
+
+	average /= count;
+	//average = static_cast<BYTE>(std::clamp(static_cast<int>(average), 0, 255));
+
+
+	for (int z = 0; z < resolution; ++z)
+	{
+		for (int x = 0; x < resolution; ++x)
+		{
+			// Convert grid index to world position
+			float worldX = (x * m_terrainPositionScalingFactor) - m_terrainSize / 2.0f;
+			float worldZ = (z * m_terrainPositionScalingFactor) - m_terrainSize / 2.0f;
+
+			float dx = worldX - cx;
+			float dz = worldZ - cz;
+
+			if ((dx * dx + dz * dz) <= radius * radius)
+			{
+				int index = x + z * resolution;
+
+					if (m_heightMap[index] < average) {
+						if (m_heightMap[index] + static_cast<int>(0.25f / m_terrainHeightScale) < 255) {
+							m_heightMap[index] += static_cast<int>(0.25f / m_terrainHeightScale);
+						}
+					}
+					else {
+						if (m_heightMap[index] - static_cast<int>(0.25f / m_terrainHeightScale) > 0) {
+							m_heightMap[index] -= static_cast<int>(0.25f / m_terrainHeightScale);
+						}
+					}
+
+					m_heightMap[index] = static_cast<BYTE>(std::clamp(static_cast<int>(m_heightMap[index]), 0, 255));
 			}
 		}
 	}

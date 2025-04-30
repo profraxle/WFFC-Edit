@@ -4,6 +4,7 @@
 #include <sstream>
 #include "Mouse.h"
 #include "MFCMain.h"
+#include "enums.h"
 //
 //ToolMain Class
 ToolMain::ToolMain()
@@ -26,7 +27,9 @@ ToolMain::ToolMain()
 
 	m_selectedGizmo = -1;
 
-	transformState = GizmoType::TRANSLATE;
+	m_gizmoState = GizmoState::TRANSLATE;
+	m_toolState = ToolState::GIZMO;
+	m_TerrainState = TerrainState::RAISE;
 }
 
 
@@ -297,13 +300,21 @@ void ToolMain::Tick(MSG *msg)
 		//add to scenegraph
 		//resend scenegraph to Direct X renderer
 
+	m_d3dRenderer.SetToolState(m_toolState);
+
 	//Renderer Update Call
 	m_d3dRenderer.Tick(&m_toolInputCommands);
 
 
+	switch (m_toolState) {
+	case ToolState::GIZMO:
+		m_d3dRenderer.SetGizmoState(m_gizmoState);
+		break;
+	}
+
 
 	if (m_toolInputCommands.mouse_LB_Down) {
-		switch (toolState) {
+		switch (m_toolState) {
 		case ToolState::GIZMO:
 				HandleGizmos();
 				break;
@@ -479,6 +490,9 @@ void ToolMain::UpdateInput(MSG* msg)
 		//set some flag for the mouse button in inputcommands
 		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
 		break;
+	case WM_MOUSEWHEEL:
+		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
+		break;
 
 	}
 	//here we update all the actual app functionality that we want.  This information will either be used int toolmain, or sent down to the renderer (Camera movement etc
@@ -545,13 +559,44 @@ void ToolMain::UpdateInput(MSG* msg)
 	else {
 		m_toolInputCommands.deleteObject = false;
 	}
+
+	if (m_keyArray['T'] && m_toolInputCommands.control) {
+		m_toolState = ToolState::TERRAIN;
+	}
+	else if (m_keyArray['T'] && m_toolState == ToolState::GIZMO) {
+		m_gizmoState = GizmoState::TRANSLATE;
+	}
+
+	if (m_keyArray['R'] && m_toolState == ToolState::GIZMO) {
+		m_gizmoState = GizmoState::ROTATE;
+	}
+
+	if (m_keyArray['G'] && m_toolInputCommands.control) {
+		m_toolState = ToolState::GIZMO;
+	}
+
+	if (m_keyArray['F'] && m_toolState == ToolState::TERRAIN) {
+		m_TerrainState = TerrainState::FLATTEN;
+	}
+
+	if (m_keyArray['R'] && m_toolState == ToolState::TERRAIN) {
+		m_TerrainState = TerrainState::RAISE;
+	}
+
+	if (m_keyArray['I'] && m_toolState == ToolState::TERRAIN) {
+		m_TerrainState = TerrainState::SMOOTH;
+	}
+
+
 	//rotation
 
 }
 
 
 void ToolMain::HandleGizmos() {
+	
 	if (m_selectedGizmo != -1 && m_selectedObject != -1) {
+
 
 
 		point1 = point2;
@@ -572,11 +617,11 @@ void ToolMain::HandleGizmos() {
 		}
 		axis2 = DirectX::XMVector3Rotate(axis, quat);
 
-		switch (transformState) {
-		case GizmoType::TRANSLATE:
+		switch (m_gizmoState) {
+		case GizmoState::TRANSLATE:
 			point2 = m_d3dRenderer.DragGizmo(axis);
 			break;
-		case GizmoType::ROTATE:
+		case GizmoState::ROTATE:
 			point2 = m_d3dRenderer.DragRotGizmo(axis);
 			break;
 		}
@@ -585,9 +630,9 @@ void ToolMain::HandleGizmos() {
 			if (DirectX::XMVectorGetX(point2) != 0 && DirectX::XMVectorGetY(point2) != 0, DirectX::XMVectorGetZ(point2) != 0) {
 				DirectX::XMVECTOR diff = DirectX::XMVectorSubtract(point2, point1);
 
-				switch (transformState) {
+				switch (m_gizmoState) {
 
-				case GizmoType::TRANSLATE:
+				case GizmoState::TRANSLATE:
 					if (m_selectedGizmo == 0) {
 						m_sceneGraph[m_selectedObject].posY += DirectX::XMVectorGetY(diff);
 					}
@@ -599,7 +644,7 @@ void ToolMain::HandleGizmos() {
 						m_sceneGraph[m_selectedObject].posX += DirectX::XMVectorGetX(diff);
 					}
 					break;
-				case GizmoType::SCALE:
+				case GizmoState::SCALE:
 					if (m_selectedGizmo == 0) {
 						m_sceneGraph[m_selectedObject].scaY += DirectX::XMVectorGetY(diff);
 					}
@@ -611,7 +656,7 @@ void ToolMain::HandleGizmos() {
 						m_sceneGraph[m_selectedObject].scaX -= DirectX::XMVectorGetX(diff);
 					}
 					break;
-				case GizmoType::ROTATE:
+				case GizmoState::ROTATE:
 
 					float angle = m_d3dRenderer.GetAngleDiff(point2, point1, axis2);
 
@@ -642,7 +687,18 @@ void ToolMain::HandleGizmos() {
 
 }
 
-void HandleTerrain() 
+void ToolMain::HandleTerrain() 
 {
 
+	switch (m_TerrainState) {
+	case TerrainState::RAISE:
+		m_d3dRenderer.TerrainRaiseLower();
+		break;
+	case TerrainState::FLATTEN:
+		m_d3dRenderer.TerrainFlatten();
+		break;
+	case TerrainState::SMOOTH:
+		m_d3dRenderer.TerrainSmooth();
+		break;
+	}
 }

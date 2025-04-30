@@ -70,15 +70,7 @@ public:
 	DirectX::XMVECTOR DragGizmo(DirectX::XMVECTOR axisDir);
 	DirectX::XMVECTOR DragRotGizmo(DirectX::XMVECTOR rotateAxis);
 
-	void DrawCircleOnTerrain(std::shared_ptr<DX::DeviceResources> deviceResources, const DirectX::SimpleMath::Vector3& center, float radius, float thickness, const DirectX::SimpleMath::Vector4& color);
-
-	float SampleHeightmap(float x, float z, float terrainSize, float terrainHeightScale, int heightmapWidth, int heightmapHeight);
-
-	float SampleHeightBilinear(float x, float z);
-
-	bool IntersectTriangle(const DirectX::XMVECTOR& rayOrigin, const DirectX::XMVECTOR& rayDir,
-		const DirectX::XMVECTOR& v0, const DirectX::XMVECTOR& v1, const DirectX::XMVECTOR& v2,
-		float& outDist);
+	float SampleHeightmapWithInterpolation(float x, float z);
 
 	// Utility to get the world-space position of a heightmap point
 	DirectX::XMFLOAT3 GetWorldPos(int x, int z, const BYTE* heightMap, float terrainSize, float heightScale, int resolution);
@@ -90,6 +82,15 @@ public:
 	int m_SelectedIndex;
 
 	RECT m_ScreenDimensions;
+
+	void TerrainFlatten();
+	void TerrainSmooth();
+
+	void TerrainRaiseLower();
+
+	void SetGizmoState(int nGizmoState);
+	void SetToolState(int nToolState);
+
 
 #ifdef DXTK_AUDIO
 	void NewAudioDevice();
@@ -147,6 +148,15 @@ private:
     std::unique_ptr<DirectX::SpriteBatch>                                   m_sprites;
     std::unique_ptr<DirectX::SpriteFont>                                    m_font;
 
+
+
+
+
+	DirectX::XMVECTOR m_terrainCoords;
+	float m_terrainRadius;
+
+
+
 #ifdef DXTK_AUDIO
     std::unique_ptr<DirectX::AudioEngine>                                   m_audEngine;
     std::unique_ptr<DirectX::WaveBank>                                      m_waveBank;
@@ -167,7 +177,8 @@ private:
 	std::shared_ptr<DirectX::Model> m_gizmoModels[3][3];
 
 
-	int m_gizmoMode;
+	int m_toolState;
+	int m_gizmoState;
 	int m_selectedGizmo;
 
 #ifdef DXTK_AUDIO
