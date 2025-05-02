@@ -62,6 +62,7 @@
     <ClCompile Include="UndoRedoDialogue.cpp">
       <Filter>MFC</Filter>
     </ClCompile>
+    <ClCompile Include="Command.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeviceResources.h">
@@ -115,6 +116,7 @@
       <Filter>MFC</Filter>
     </ClInclude>
     <ClInclude Include="Enums.h" />
+    <ClInclude Include="Command.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -163,6 +163,15 @@ void Game::Update(DX::StepTimer const& timer)
 		
 		m_camOrientation.y -= diff.x;
 		m_camOrientation.x += diff.y;
+
+		if (mouseState.scrollWheelValue != 0) {
+
+			m_movespeed += mouseState.scrollWheelValue / 120.f;
+
+			m_movespeed = std::clamp(m_movespeed, 0.2f, 2.0f);
+			m_mouse->ResetScrollWheelValue();
+		}
+
 	}
 	mousePos = Vector2(mouseState.x, mouseState.y);
 
@@ -207,16 +216,19 @@ void Game::Update(DX::StepTimer const& timer)
 		break;
 	case ToolState::TERRAIN:
 
-		if (m_mouse->GetState().scrollWheelValue != 0) {
+		if (!mouseState.rightButton)
+		{
+			if (mouseState.scrollWheelValue != 0) {
 
-			m_terrainRadius += m_mouse.get()->GetState().scrollWheelValue / 120.f;
+				m_terrainRadius += mouseState.scrollWheelValue / 120.f;
 
-			m_terrainRadius = std::clamp(m_terrainRadius, 1.f, 50.0f);
-			m_mouse->ResetScrollWheelValue();
+				m_terrainRadius = std::clamp(m_terrainRadius, 1.f, 50.0f);
+				m_mouse->ResetScrollWheelValue();
+			}
+
+
+			m_terrainCoords = FindMouseOnTerrain();
 		}
-
-
-		m_terrainCoords = FindMouseOnTerrain();
 		break;
 	}
 
@@ -711,9 +723,9 @@ void Game::CreateDeviceDependentResources()
 	m_gizmoModels[0][2] = Model::CreateFromSDKMESH(device, L"gizmoBlue.sdkmesh", *m_fxFactory);
 
 	//store rotator gizmo models
-	m_gizmoModels[1][0] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
-	m_gizmoModels[1][1] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
-	m_gizmoModels[1][2] = Model::CreateFromSDKMESH(device, L"rotateGizmo.sdkmesh", *m_fxFactory);
+	m_gizmoModels[1][0] = Model::CreateFromSDKMESH(device, L"rotateGizmoRed.sdkmesh", *m_fxFactory);
+	m_gizmoModels[1][1] = Model::CreateFromSDKMESH(device, L"rotateGizmoGreen.sdkmesh", *m_fxFactory);
+	m_gizmoModels[1][2] = Model::CreateFromSDKMESH(device, L"rotateGizmoBlue.sdkmesh", *m_fxFactory);
 
     // Load textures
     DX::ThrowIfFailed(
@@ -1228,10 +1240,14 @@ float Game::SampleHeightmapWithInterpolation(float x, float z)
 
 
 // Function to raise terrain height around a point
-void Game::TerrainRaiseLower()
+void Game::TerrainRaiseLower(bool isRaise)
 {
-
-	m_displayChunk.RaiseTerrainHeightAroundPoint(m_terrainCoords, m_terrainRadius,0.5f);
+	if (isRaise) {
+		m_displayChunk.RaiseTerrainHeightAroundPoint(m_terrainCoords, m_terrainRadius, 0.5f);
+	}
+	else {
+		m_displayChunk.RaiseTerrainHeightAroundPoint(m_terrainCoords, m_terrainRadius, -0.5f);
+	}
 	m_displayChunk.UpdateTerrain();
 }
 
@@ -1257,4 +1273,8 @@ void Game::SetGizmoState(int nGizmoState)
 void Game::SetToolState(int nToolState)
 {
 	m_toolState= nToolState;
+}
+
+void Game::GetHeightmap(BYTE* outMap) {
+	std::memcpy(outMap, m_displayChunk.m_heightMap, sizeof(m_displayChunk.m_heightMap));
 }

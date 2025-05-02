@@ -20,7 +20,7 @@ BOOL MFCMain::InitInstance()
 	m_frame->Create(	NULL,
 					_T("World Of Flim-Flam Craft Editor"),
 					WS_OVERLAPPEDWINDOW,
-					CRect(100, 100, 1024, 768),
+					CRect(100, 100, 1920, 1080),
 					NULL,
 					NULL,
 					0,
@@ -96,6 +96,10 @@ void MFCMain::MenuFileSaveTerrain()
 
 void MFCMain::MenuEditSelect()
 {
+
+	//CWnd* pPlaceholder = m_frame->GetDlgItem(IDC_SELECT_DIALOG_PLACEHOLDER)
+
+
 	//SelectDialogue m_ToolSelectDialogue(NULL, &m_ToolSystem.m_sceneGraph);		//create our dialoguebox //modal constructor
 	//m_ToolSelectDialogue.DoModal();	// start it up modal
 

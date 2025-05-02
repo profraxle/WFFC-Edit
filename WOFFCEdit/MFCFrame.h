@@ -17,12 +17,14 @@ public:
 	CStatusBar		m_wndStatusBar;
 	CToolBar		m_toolBar;
 	CChildRender	m_DirXView;
+	CStatic m_selectDialogPlaceholder;
+
 
 public:
 	CMyFrame();
 	void SetCurrentSelectionID(int ID);
 	afx_msg void OnUpdatePage(CCmdUI *pCmdUI);
-
+	void OnSize(UINT nType, int cx, int cy);
 
 private:	//overrides
 	int		m_selectionID;	//

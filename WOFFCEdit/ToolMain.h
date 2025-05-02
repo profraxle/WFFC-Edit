@@ -8,6 +8,7 @@
 #include "InputCommands.h"
 #include <vector>
 #include <stack>
+#include "Command.h"
 
 
 class MFCMain;
@@ -52,10 +53,10 @@ public:	//variables
 
 	bool pasteTrigger, undoTrigger,redoTrigger;
 
-	std::stack < std::vector<SceneObject>> history;
+	std::stack < Command> history;
 	void UpdateHistory();
 
-	std::stack<std::vector<SceneObject>> futureHistory;
+	std::stack<Command> futureHistory;
 	void UpdateFutureHistory();
 
 	void HandleGizmos();

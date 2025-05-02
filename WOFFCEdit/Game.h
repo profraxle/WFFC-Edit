@@ -86,10 +86,12 @@ public:
 	void TerrainFlatten();
 	void TerrainSmooth();
 
-	void TerrainRaiseLower();
+	void TerrainRaiseLower(bool isRaise);
 
 	void SetGizmoState(int nGizmoState);
 	void SetToolState(int nToolState);
+
+	void GetHeightmap(BYTE* outMap);
 
 
 #ifdef DXTK_AUDIO

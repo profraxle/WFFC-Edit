@@ -338,7 +338,10 @@ void ToolMain::Tick(MSG *msg)
 
 			if (gizmoInteract != -1) {
 				UpdateHistory();
-				futureHistory = std::stack<std::vector<SceneObject>>();
+
+				
+
+				futureHistory = std::stack<Command>();
 				m_selectedGizmo = gizmoInteract;
 				
 			}
@@ -351,7 +354,7 @@ void ToolMain::Tick(MSG *msg)
 
 			if (gizmoInteract != -1) {
 				UpdateHistory();
-				futureHistory = std::stack<std::vector<SceneObject>>();
+				futureHistory = std::stack<Command>();
 				m_selectedGizmo = gizmoInteract;
 
 			}
@@ -393,7 +396,7 @@ void ToolMain::Tick(MSG *msg)
 			newObj.ID = IDtry;
 
 			UpdateHistory();
-			futureHistory = std::stack<std::vector<SceneObject>>();
+			futureHistory = std::stack<Command>();
 
 			m_sceneGraph.push_back(newObj);
 			m_toolInputCommands.paste = false;
@@ -404,7 +407,8 @@ void ToolMain::Tick(MSG *msg)
 	if (m_toolInputCommands.undo && undoTrigger) {
 		if (!history.empty()) {
 			UpdateFutureHistory();
-			m_sceneGraph = history.top();
+			m_sceneGraph = history.top().sceneGraph;
+			m_selectedObject = history.top().selectedObject;
 			history.pop();
 
 			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
@@ -414,7 +418,8 @@ void ToolMain::Tick(MSG *msg)
 	if (m_toolInputCommands.redo && redoTrigger) {
 		if (!futureHistory.empty()) {
 			UpdateHistory();
-			m_sceneGraph = futureHistory.top();
+			m_sceneGraph = futureHistory.top().sceneGraph;
+			m_selectedObject = futureHistory.top().selectedObject;
 			futureHistory.pop();
 
 			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
@@ -425,7 +430,7 @@ void ToolMain::Tick(MSG *msg)
 	if (m_toolInputCommands.deleteObject) {
 		if (m_selectedObject != -1) {
 			UpdateHistory();
-			futureHistory = std::stack<std::vector<SceneObject>>();
+			futureHistory = std::stack<Command>();
 			m_sceneGraph.erase(m_sceneGraph.begin() + m_selectedObject);
 			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
 			m_selectedObject = -1;
@@ -436,11 +441,25 @@ void ToolMain::Tick(MSG *msg)
 }
 
 void ToolMain::UpdateHistory() {
-	history.push(m_sceneGraph);
+
+
+	BYTE heightMap[TERRAINRESOLUTION * TERRAINRESOLUTION];
+	m_d3dRenderer.GetHeightmap(heightMap);
+
+
+	Command newCommand(m_sceneGraph, m_selectedObject, heightMap);
+
+	history.push(newCommand);
 }
 
 void ToolMain::UpdateFutureHistory() {
-	futureHistory.push(m_sceneGraph);
+	BYTE heightMap[TERRAINRESOLUTION * TERRAINRESOLUTION];
+	m_d3dRenderer.GetHeightmap(heightMap);
+
+
+	Command newCommand(m_sceneGraph, m_selectedObject, heightMap);
+
+	history.push(newCommand);
 }
 
 void ToolMain::SetMFCMain(MFCMain* n_MFCMain)
@@ -587,6 +606,10 @@ void ToolMain::UpdateInput(MSG* msg)
 		m_TerrainState = TerrainState::SMOOTH;
 	}
 
+	if (m_keyArray['L'] && m_toolState == ToolState::TERRAIN) {
+		m_TerrainState = TerrainState::LOWER;
+	}
+
 
 	//rotation
 
@@ -692,7 +715,10 @@ void ToolMain::HandleTerrain()
 
 	switch (m_TerrainState) {
 	case TerrainState::RAISE:
-		m_d3dRenderer.TerrainRaiseLower();
+		m_d3dRenderer.TerrainRaiseLower(true);
+		break;
+	case TerrainState::LOWER:
+		m_d3dRenderer.TerrainRaiseLower(false);
 		break;
 	case TerrainState::FLATTEN:
 		m_d3dRenderer.TerrainFlatten();
