@@ -62,6 +62,7 @@ public:	//variables
 	void HandleGizmos();
 	void HandleTerrain();
 
+	bool isInGame;
 
 private:	//methods
 	void	onContentAdded();

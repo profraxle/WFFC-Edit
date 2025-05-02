@@ -1,8 +1,10 @@
 D:\Github\WFFC-Edit\WOFFCEdit\ChunkObject.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\ChunkObject.obj
+D:\Github\WFFC-Edit\WOFFCEdit\Command.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\Command.obj
 D:\Github\WFFC-Edit\WOFFCEdit\DeviceResources.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\DeviceResources.obj
 D:\Github\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\DisplayChunk.obj
 D:\Github\WFFC-Edit\WOFFCEdit\DisplayObject.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\DisplayObject.obj
 D:\Github\WFFC-Edit\WOFFCEdit\Game.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\Game.obj
+D:\Github\WFFC-Edit\WOFFCEdit\GizmoDialogue.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\GizmoDialogue.obj
 D:\Github\WFFC-Edit\WOFFCEdit\Main.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\Main.obj
 D:\Github\WFFC-Edit\WOFFCEdit\MFCFrame.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\MFCFrame.obj
 D:\Github\WFFC-Edit\WOFFCEdit\MFCRenderFrame.cpp;D:\Github\WFFC-Edit\WOFFCEdit\x64\Debug\MFCRenderFrame.obj

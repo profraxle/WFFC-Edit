@@ -40,14 +40,14 @@ void CMyFrame::OnUpdatePage(CCmdUI * pCmdUI)
 int CMyFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1) return -1;
-
+	
 	// create a view to occupy the client area of the frame //This is where DirectX is rendered
-	if (!m_DirXView.Create(NULL, NULL, AFX_WS_DEFAULT_VIEW, CRect(0, 0, 0, 0), this, AFX_IDW_PANE_FIRST, NULL))
+	if (!m_DirXView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 0, 800, 600), this, NULL))
 	{
 		TRACE0("Failed to create view window\n");
 		return -1;
 	}
-	m_DirXView.ShowWindow(SW_HIDE);
+	//m_DirXView.ShowWindow(SW_HIDE);
 
 	m_menu1.LoadMenuW(IDR_MENU1);
 	SetMenu(&m_menu1);
@@ -70,7 +70,7 @@ int CMyFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndStatusBar.SetPaneInfo(1, ID_INDICATOR_TOOL, SBPS_NORMAL, rect.Width() - 500);//set width of status bar panel
 
 	if (!m_selectDialogPlaceholder.Create(_T(""), WS_CHILD | WS_VISIBLE | SS_GRAYRECT,
-		CRect(100, 0, 250, 1080), this, IDC_SELECT_DIALOG_PLACEHOLDER))
+		CRect(800, 0, 1200, 600), this, IDC_SELECT_DIALOG_PLACEHOLDER))
 	{
 		TRACE0("Failed to create placeholder\n");
 		return -1;
@@ -90,15 +90,4 @@ void CMyFrame::OnSize(UINT nType, int cx, int cy)
 {
 	CFrameWnd::OnSize(nType, cx, cy);
 
-	// Shrink DirXView to leave 250px gap on the right for tools
-	if (m_DirXView.GetSafeHwnd())
-	{
-		m_DirXView.MoveWindow(0, 0, cx - 250, cy);
-	}
-
-	// Place placeholder into that right panel
-	if (m_selectDialogPlaceholder.GetSafeHwnd())
-	{
-		m_selectDialogPlaceholder.MoveWindow(cx - 240, 10, 230, cy - 20);
-	}
 }

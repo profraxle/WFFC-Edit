@@ -312,8 +312,21 @@ void ToolMain::Tick(MSG *msg)
 		break;
 	}
 
+	
+	POINT pt;
+	GetCursorPos(&pt);
 
-	if (m_toolInputCommands.mouse_LB_Down) {
+	// Get window under mouse
+	HWND hWndUnderMouse = WindowFromPoint(pt);
+
+	isInGame = (hWndUnderMouse == m_MFCMain->m_frame->m_DirXView.GetSafeHwnd());
+	
+	if (isInGame) {
+		m_MFCMain->m_frame->m_DirXView.SetFocus();		
+	}
+
+
+	if (m_toolInputCommands.mouse_LB_Down && isInGame) {
 		switch (m_toolState) {
 		case ToolState::GIZMO:
 				HandleGizmos();
@@ -322,9 +335,10 @@ void ToolMain::Tick(MSG *msg)
 				HandleTerrain();
 				break;
 		}
+
 	}
 
-	if (canSelect) {
+	if (canSelect && isInGame) {
 
 
 		//store the selected object temporarily
@@ -361,6 +375,11 @@ void ToolMain::Tick(MSG *msg)
 			else {
 
 				m_selectedObject = tempSelect;
+
+				if (tempSelect != -1) {
+					m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
+						m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
+				}
 			}
 		}
 
@@ -516,24 +535,25 @@ void ToolMain::UpdateInput(MSG* msg)
 	}
 	//here we update all the actual app functionality that we want.  This information will either be used int toolmain, or sent down to the renderer (Camera movement etc
 	//WASD movement
-	if (m_keyArray['W'])
+
+	if (m_keyArray['W'] && isInGame)
 	{
 		m_toolInputCommands.forward = true;
 	}
 	else m_toolInputCommands.forward = false;
 
-	if (m_keyArray['S'])
+	if (m_keyArray['S'] && isInGame)
 	{
 		m_toolInputCommands.back = true;
 	}
 	else m_toolInputCommands.back = false;
-	if (m_keyArray['A'])
+	if (m_keyArray['A'] && isInGame)
 	{
 		m_toolInputCommands.left = true;
 	}
 	else m_toolInputCommands.left = false;
 
-	if (m_keyArray['D'])
+	if (m_keyArray['D'] && isInGame)
 	{
 		m_toolInputCommands.right = true;
 	}
@@ -666,6 +686,8 @@ void ToolMain::HandleGizmos() {
 					if (m_selectedGizmo == 2) {
 						m_sceneGraph[m_selectedObject].posX += DirectX::XMVectorGetX(diff);
 					}
+					m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
+						m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
 					break;
 				case GizmoState::SCALE:
 					if (m_selectedGizmo == 0) {
@@ -695,6 +717,8 @@ void ToolMain::HandleGizmos() {
 						if (m_selectedGizmo == 2) {
 							m_sceneGraph[m_selectedObject].rotX += angle;
 						}
+						m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
+							m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
 					}
 
 					break;

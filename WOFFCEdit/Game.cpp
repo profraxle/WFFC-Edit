@@ -1277,4 +1277,16 @@ void Game::SetToolState(int nToolState)
 
 void Game::GetHeightmap(BYTE* outMap) {
 	std::memcpy(outMap, m_displayChunk.m_heightMap, sizeof(m_displayChunk.m_heightMap));
+
+}
+
+bool Game::IsMouseInGame() {
+	int x = m_mouse->GetState().x;
+	int y = m_mouse->GetState().y;
+
+	if (x< m_ScreenDimensions.right) {
+		return true;
+	};
+
+	return false;
 }

@@ -6,6 +6,7 @@
 
 
 
+
 class CMyFrame : public CFrameWnd
 {
 protected:

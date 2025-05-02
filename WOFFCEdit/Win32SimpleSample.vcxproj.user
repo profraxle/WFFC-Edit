@@ -4,4 +4,7 @@
     <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup>
+    <RESOURCE_FILE>Win32SimpleSample.rc</RESOURCE_FILE>
+  </PropertyGroup>
 </Project>

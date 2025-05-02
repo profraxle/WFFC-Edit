@@ -20,7 +20,7 @@ BOOL MFCMain::InitInstance()
 	m_frame->Create(	NULL,
 					_T("World Of Flim-Flam Craft Editor"),
 					WS_OVERLAPPEDWINDOW,
-					CRect(100, 100, 1920, 1080),
+					CRect(100, 100, 1320, 795),
 					NULL,
 					NULL,
 					0,
@@ -35,11 +35,14 @@ BOOL MFCMain::InitInstance()
 	//get the rect from the MFC window so we can get its dimensions
 	m_toolHandle = m_frame->m_DirXView.GetSafeHwnd();				//handle of directX child window
 	m_frame->m_DirXView.GetClientRect(&WindowRECT);
-	m_width		= WindowRECT.Width();
-	m_height	= WindowRECT.Height();
+	m_width = 800;
+	m_height = 600;
 
 	m_ToolSystem.onActionInitialise(m_toolHandle, m_width, m_height);
 	m_ToolSystem.SetMFCMain(this);
+
+	MenuEditGizmo();
+
 
 	return TRUE;
 }
@@ -97,16 +100,23 @@ void MFCMain::MenuFileSaveTerrain()
 void MFCMain::MenuEditSelect()
 {
 
-	//CWnd* pPlaceholder = m_frame->GetDlgItem(IDC_SELECT_DIALOG_PLACEHOLDER)
+	CWnd* pPlaceholder = m_frame->GetDlgItem(IDC_SELECT_DIALOG_PLACEHOLDER);
 
+		if (pPlaceholder) {
+			//SelectDialogue m_ToolSelectDialogue(NULL, &m_ToolSystem.m_sceneGraph);		//create our dialoguebox //modal constructor
+			//m_ToolSelectDialogue.DoModal();	// start it up modal
 
-	//SelectDialogue m_ToolSelectDialogue(NULL, &m_ToolSystem.m_sceneGraph);		//create our dialoguebox //modal constructor
-	//m_ToolSelectDialogue.DoModal();	// start it up modal
+			//modeless dialogue must be declared in the class.   If we do local it will go out of scope instantly and destroy itself
+			m_ToolSelectDialogue.Create(IDD_DIALOG1,pPlaceholder);	//Start up modeless
+			m_ToolSelectDialogue.ShowWindow(SW_SHOW);	//show modeless
 
-	//modeless dialogue must be declared in the class.   If we do local it will go out of scope instantly and destroy itself
-	m_ToolSelectDialogue.Create(IDD_DIALOG1);	//Start up modeless
-	m_ToolSelectDialogue.ShowWindow(SW_SHOW);	//show modeless
+			CRect rect;
+			pPlaceholder->GetClientRect(&rect);
+			m_ToolSelectDialogue.MoveWindow(&rect);
+
+		}
 	m_ToolSelectDialogue.SetObjectData(&m_ToolSystem.m_sceneGraph, &m_ToolSystem.m_selectedObject);
+
 }
 
 void MFCMain::MenuEditUndoRedo()
@@ -138,4 +148,36 @@ MFCMain::MFCMain()
 
 MFCMain::~MFCMain()
 {
+}
+
+void MFCMain::MenuEditGizmo()
+{
+	// Get the placeholder control (CWnd)
+	CWnd* pPlaceholder = m_frame->GetDlgItem(IDC_SELECT_DIALOG_PLACEHOLDER);
+
+	if (pPlaceholder) {
+		// If the dialog hasn't already been created, create it
+		if (!::IsWindow(m_GizmoDialogue.GetSafeHwnd())) {
+			m_GizmoDialogue.Create(IDD_GIZMODIALOGUE, pPlaceholder);
+		}
+
+		// Modify the extended style of the dialog to remove borders and title bar
+		m_GizmoDialogue.ModifyStyle(WS_CAPTION | WS_SYSMENU | WS_BORDER, 0, SWP_FRAMECHANGED);
+		m_GizmoDialogue.ModifyStyleEx(WS_EX_DLGMODALFRAME, 0, SWP_FRAMECHANGED);
+
+
+		// Get the client rectangle of the placeholder
+		CRect rect;
+		pPlaceholder->GetClientRect(&rect);
+
+		m_GizmoDialogue.SetParent(pPlaceholder);
+
+		// Move and resize the dialog to fit inside the placeholder
+		m_GizmoDialogue.MoveWindow(&rect);
+
+
+
+		// Show the dialog
+		m_GizmoDialogue.ShowWindow(SW_SHOW);
+	}
 }

@@ -93,6 +93,7 @@ public:
 
 	void GetHeightmap(BYTE* outMap);
 
+	bool IsMouseInGame();
 
 #ifdef DXTK_AUDIO
 	void NewAudioDevice();
