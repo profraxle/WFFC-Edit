@@ -30,6 +30,8 @@ ToolMain::ToolMain()
 	m_gizmoState = GizmoState::TRANSLATE;
 	m_toolState = ToolState::GIZMO;
 	m_TerrainState = TerrainState::RAISE;
+
+	terrainActionDone = false;
 }
 
 
@@ -282,7 +284,6 @@ void ToolMain::onActionSave()
 		rc = sqlite3_prepare_v2(m_databaseConnection, sqlCommand2.c_str(), -1, &pResults, 0);
 		sqlite3_step(pResults);	
 	}
-	MessageBox(NULL, L"Objects Saved", L"Notification", MB_OK);
 }
 
 void ToolMain::onActionSaveTerrain()
@@ -292,42 +293,95 @@ void ToolMain::onActionSaveTerrain()
 
 void ToolMain::Tick(MSG *msg)
 {
-	//do we have a selection
-	//do we have a mode
-	//are we clicking / dragging /releasing
-	//has something changed
-		//update Scenegraph
-		//add to scenegraph
-		//resend scenegraph to Direct X renderer
 
+	//set the tool mode in the renderer
 	m_d3dRenderer.SetToolState(m_toolState);
 
 	//Renderer Update Call
 	m_d3dRenderer.Tick(&m_toolInputCommands);
 
-
+	//chamge based on which tool is being used
 	switch (m_toolState) {
 	case ToolState::GIZMO:
 		m_d3dRenderer.SetGizmoState(m_gizmoState);
 		break;
 	}
 
+	//if the gizmo dialogue has been edited and sent a signal
+	if (m_MFCMain->m_GizmoDialogue.valueUpdated) 
+	{
+		//do this if theres a selected object
+		if (m_selectedObject != -1) {
+
+
+			UpdateHistory();
+
+			//load the selected objects position and rotation from the dialogue
+			m_sceneGraph[m_selectedObject].posX = m_MFCMain->m_GizmoDialogue.nX;
+			m_sceneGraph[m_selectedObject].posY = m_MFCMain->m_GizmoDialogue.nY;
+			m_sceneGraph[m_selectedObject].posZ = m_MFCMain->m_GizmoDialogue.nZ;
+
+			m_sceneGraph[m_selectedObject].rotX = m_MFCMain->m_GizmoDialogue.nPitch;
+			m_sceneGraph[m_selectedObject].rotY = m_MFCMain->m_GizmoDialogue.nYaw;
+			m_sceneGraph[m_selectedObject].rotZ = m_MFCMain->m_GizmoDialogue.nRoll;
+
+			//update the display list
+			m_d3dRenderer.UpdateDisplayList(&m_sceneGraph);
+
+			//feedback into the dialogue with new options
+			m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
+				m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ, m_selectedObject);
+		}
+
+		//set the gizmoState to the selected one
+		m_gizmoState = m_MFCMain->m_GizmoDialogue.gizmoState;
+
+		//unset signal
+		m_MFCMain->m_GizmoDialogue.valueUpdated = false;
+	}
+
+	//if the radius of terrain tool has been changed from renderer
+	if (m_d3dRenderer.m_changeRadius)
+	{
+
+		//set the radius value in the dialogue
+		m_d3dRenderer.m_changeRadius = false;
+		m_MFCMain->m_TerrainDialogue.ChangeRadius(m_d3dRenderer.m_terrainRadius);
+	}
+
+	//if the dialogue has been updated
+	if (m_MFCMain->m_TerrainDialogue.valueUpdated) 
+	{
+		//set the new terrain state
+		m_TerrainState = m_MFCMain->m_TerrainDialogue.storeState;
+		m_MFCMain->m_TerrainDialogue.valueUpdated = false;
+
+		//set the new terrain radius and feedback to the dialogue
+		m_d3dRenderer.m_terrainRadius =  m_MFCMain->m_TerrainDialogue.storeRadius;
+		m_MFCMain->m_TerrainDialogue.ChangeRadius(m_d3dRenderer.m_terrainRadius);
+	}
+
 	
+	//get the mouse position on whole window
 	POINT pt;
 	GetCursorPos(&pt);
 
 	// Get window under mouse
 	HWND hWndUnderMouse = WindowFromPoint(pt);
 
+	//check if the mouse is focused in renderer
 	isInGame = (hWndUnderMouse == m_MFCMain->m_frame->m_DirXView.GetSafeHwnd());
 	
+	//set focus on the renderer if so
 	if (isInGame) {
 		m_MFCMain->m_frame->m_DirXView.SetFocus();		
 	}
 
-
-	if (m_toolInputCommands.mouse_LB_Down && isInGame) {
-		switch (m_toolState) {
+	//handle mouse being down for different tool states
+	if (m_toolInputCommands.mouse_LB_Down && isInGame) 
+	{
+		switch (m_toolState)
+		{
 		case ToolState::GIZMO:
 				HandleGizmos();
 				break;
@@ -335,9 +389,9 @@ void ToolMain::Tick(MSG *msg)
 				HandleTerrain();
 				break;
 		}
-
 	}
 
+	//handle mouse going down to select object
 	if (canSelect && isInGame) {
 
 
@@ -352,9 +406,6 @@ void ToolMain::Tick(MSG *msg)
 
 			if (gizmoInteract != -1) {
 				UpdateHistory();
-
-				
-
 				futureHistory = std::stack<Command>();
 				m_selectedGizmo = gizmoInteract;
 				
@@ -378,23 +429,27 @@ void ToolMain::Tick(MSG *msg)
 
 				if (tempSelect != -1) {
 					m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
-						m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
+						m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ,m_selectedObject);
 				}
 			}
 		}
 
+		//set the selected object and gizmo within the renderer to the one selected here
 		m_d3dRenderer.SetSelectedIndex(m_selectedObject);
 		m_d3dRenderer.SetSelectedGizmo(m_selectedGizmo);
 		canSelect = false;
 	}
 	
 
+	//copy object
 	if (m_toolInputCommands.copy) {
 
 		if (m_selectedObject != -1) {
 			copyObject = m_sceneGraph[m_selectedObject];
 		}
 	}
+
+	//paste object
 	if (m_toolInputCommands.paste && pasteTrigger) 
 	{
 			SceneObject newObj = copyObject;
@@ -403,6 +458,7 @@ void ToolMain::Tick(MSG *msg)
 			int IDtry = 0;
 			bool IDfound = false;
 
+			//register ID not found before
 			while (!IDfound) {
 				if (std::find(registeredIDs.begin(), registeredIDs.end(), IDtry) != registeredIDs.end()){
 					++IDtry;
@@ -423,29 +479,17 @@ void ToolMain::Tick(MSG *msg)
 			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
 			pasteTrigger = false;
 	}
-	if (m_toolInputCommands.undo && undoTrigger) {
-		if (!history.empty()) {
-			UpdateFutureHistory();
-			m_sceneGraph = history.top().sceneGraph;
-			m_selectedObject = history.top().selectedObject;
-			history.pop();
 
-			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
-			undoTrigger = false;
-		}
+	//undo and redo triggers
+
+	if (m_toolInputCommands.undo && undoTrigger) {
+		UndoFunction();
 	}
 	if (m_toolInputCommands.redo && redoTrigger) {
-		if (!futureHistory.empty()) {
-			UpdateHistory();
-			m_sceneGraph = futureHistory.top().sceneGraph;
-			m_selectedObject = futureHistory.top().selectedObject;
-			futureHistory.pop();
-
-			m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
-			redoTrigger = false;
-		}
+		RedoFunction();
 	}
 
+	//delete selected object
 	if (m_toolInputCommands.deleteObject) {
 		if (m_selectedObject != -1) {
 			UpdateHistory();
@@ -456,6 +500,15 @@ void ToolMain::Tick(MSG *msg)
 			m_d3dRenderer.SetSelectedIndex(-1);
 			m_d3dRenderer.SetSelectedGizmo(-1);
 		}
+	}
+
+	//save the terrain and objects
+	if (m_toolInputCommands.save && saveTrigger) 
+	{
+		onActionSaveTerrain();
+		onActionSave();
+
+		saveTrigger = false;
 	}
 }
 
@@ -478,7 +531,7 @@ void ToolMain::UpdateFutureHistory() {
 
 	Command newCommand(m_sceneGraph, m_selectedObject, heightMap);
 
-	history.push(newCommand);
+	futureHistory.push(newCommand);
 }
 
 void ToolMain::SetMFCMain(MFCMain* n_MFCMain)
@@ -518,6 +571,7 @@ void ToolMain::UpdateInput(MSG* msg)
 	case WM_LBUTTONUP:
 		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
 		m_toolInputCommands.mouse_LB_Down = false;
+		terrainActionDone = false;
 		break;
 	case WM_RBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
 		//set some flag for the mouse button in inputcommands
@@ -542,7 +596,7 @@ void ToolMain::UpdateInput(MSG* msg)
 	}
 	else m_toolInputCommands.forward = false;
 
-	if (m_keyArray['S'] && isInGame)
+	if (m_keyArray['S'] && isInGame && !m_toolInputCommands.control)
 	{
 		m_toolInputCommands.back = true;
 	}
@@ -600,38 +654,50 @@ void ToolMain::UpdateInput(MSG* msg)
 	}
 
 	if (m_keyArray['T'] && m_toolInputCommands.control) {
-		m_toolState = ToolState::TERRAIN;
+		m_MFCMain->ToolBarButton5();
+		m_MFCMain->m_TerrainDialogue.ChangeRadius(m_d3dRenderer.m_terrainRadius);
 	}
 	else if (m_keyArray['T'] && m_toolState == ToolState::GIZMO) {
-		m_gizmoState = GizmoState::TRANSLATE;
+		m_MFCMain->m_GizmoDialogue.OnBnClickedTranslate();
 	}
 
 	if (m_keyArray['R'] && m_toolState == ToolState::GIZMO) {
-		m_gizmoState = GizmoState::ROTATE;
+		m_MFCMain->m_GizmoDialogue.OnBnClickedRotate();
 	}
 
 	if (m_keyArray['G'] && m_toolInputCommands.control) {
-		m_toolState = ToolState::GIZMO;
+		m_MFCMain->ToolBarButton4();
 	}
 
 	if (m_keyArray['F'] && m_toolState == ToolState::TERRAIN) {
-		m_TerrainState = TerrainState::FLATTEN;
+		m_MFCMain->m_TerrainDialogue.OnBnClickedFlatterrain();
+
 	}
 
 	if (m_keyArray['R'] && m_toolState == ToolState::TERRAIN) {
-		m_TerrainState = TerrainState::RAISE;
+		m_MFCMain->m_TerrainDialogue.OnBnClickedRaiseterrain();
+
 	}
 
 	if (m_keyArray['I'] && m_toolState == ToolState::TERRAIN) {
-		m_TerrainState = TerrainState::SMOOTH;
+		m_MFCMain->m_TerrainDialogue.OnBnClickedSmoothterrain();
+
 	}
 
 	if (m_keyArray['L'] && m_toolState == ToolState::TERRAIN) {
-		m_TerrainState = TerrainState::LOWER;
+		m_MFCMain->m_TerrainDialogue.OnBnClickedLowterrain();
+
 	}
 
 
-	//rotation
+	if (m_keyArray['S'] && m_toolInputCommands.control) {
+		m_toolInputCommands.save = true;
+	}
+	else {
+		m_toolInputCommands.save = false;
+		saveTrigger = true;
+	}
+
 
 }
 
@@ -687,7 +753,7 @@ void ToolMain::HandleGizmos() {
 						m_sceneGraph[m_selectedObject].posX += DirectX::XMVectorGetX(diff);
 					}
 					m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
-						m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
+						m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ, m_selectedObject);
 					break;
 				case GizmoState::SCALE:
 					if (m_selectedGizmo == 0) {
@@ -718,7 +784,7 @@ void ToolMain::HandleGizmos() {
 							m_sceneGraph[m_selectedObject].rotX += angle;
 						}
 						m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
-							m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
+							m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ, m_selectedObject);
 					}
 
 					break;
@@ -736,6 +802,10 @@ void ToolMain::HandleGizmos() {
 
 void ToolMain::HandleTerrain() 
 {
+	if (!terrainActionDone) {
+		UpdateHistory();
+		terrainActionDone= true;
+	}
 
 	switch (m_TerrainState) {
 	case TerrainState::RAISE:
@@ -751,4 +821,37 @@ void ToolMain::HandleTerrain()
 		m_d3dRenderer.TerrainSmooth();
 		break;
 	}
+}
+
+void ToolMain::UndoFunction() {
+	if (!history.empty()) {
+		UpdateFutureHistory();
+		m_sceneGraph = history.top().sceneGraph;
+		m_selectedObject = history.top().selectedObject;
+		m_d3dRenderer.SetHeightmap(history.top().m_heightMap);
+
+		m_d3dRenderer.SetSelectedIndex(m_selectedObject);
+
+		history.pop();
+
+		m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
+		undoTrigger = false;
+	}
+}
+void ToolMain::RedoFunction() {
+	if (!futureHistory.empty()) {
+		UpdateHistory();
+		m_sceneGraph = futureHistory.top().sceneGraph;
+		m_selectedObject = futureHistory.top().selectedObject;
+		futureHistory.pop();
+		m_d3dRenderer.SetSelectedIndex(m_selectedObject);
+
+		m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
+		redoTrigger = false;
+	}
+}
+
+void ToolMain::SetToolState(int state)
+{
+	m_toolState = state;
 }

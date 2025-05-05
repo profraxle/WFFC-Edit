@@ -22,6 +22,8 @@ public:
 	enum { IDD = IDD_GIZMODIALOGUE };
 #endif
 
+	int gizmoState;
+
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	afx_msg void End();		//kill the dialogue
@@ -29,7 +31,10 @@ protected:
 
 	std::vector<SceneObject>* m_sceneGraph;
 	int* m_currentSelection;
+	
+	int selectedID;
 
+	bool updateFlags;
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -38,11 +43,34 @@ public:
 	virtual BOOL OnInitDialog() override;
 	virtual void PostNcDestroy();
 	afx_msg void OnBnClickedOk();
-	afx_msg void OnLbnSelchangeList1();
-	afx_msg void OnEnChangeXpos();
-	afx_msg void OnEnChangeYpos();
 
-	void ChangeSelectedObject(float x, float y, float z, float pitch, float yaw, float roll);
+	float nX;
+	float nY;
+	float nZ;
+
+	float nYaw;
+	float nPitch;
+	float nRoll;
+
+
+	bool valueUpdated;
+
+	void ChangeSelectedObject(float x, float y, float z, float pitch, float yaw, float roll, int ID);
+
+
+	afx_msg void OnEnKillfocusXPos();
+	afx_msg void OnEnKillfocusYPos();
+	afx_msg void OnEnKillfocusZPos();
+
+	afx_msg void OnEnKillfocusPitch();
+	afx_msg void OnEnKillfocusYaw();
+	afx_msg void OnEnKillfocusRoll();
+
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+
+	void OnKillFocus(UINT ctrlID, float& store);
+	afx_msg void OnBnClickedTranslate();
+	afx_msg void OnBnClickedRotate();
 };
 
 

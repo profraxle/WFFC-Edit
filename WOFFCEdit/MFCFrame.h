@@ -1,6 +1,7 @@
 #pragma once
 #include <afxwin.h> 
 #include <afxext.h>
+#include <afxcmn.h>
 #include "MFCRenderFrame.h"
 #include "ToolMain.h"
 
@@ -33,4 +34,5 @@ private:	//overrides
 	//note the afx_message keyword is linking this method to message map access.
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	DECLARE_MESSAGE_MAP()	// required macro for message map functionality  One per class
+
 };

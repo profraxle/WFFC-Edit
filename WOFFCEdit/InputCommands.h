@@ -17,4 +17,5 @@ struct InputCommands
 	bool undo;
 	bool redo;
 	bool deleteObject;
+	bool save;
 };

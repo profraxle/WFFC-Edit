@@ -1,13 +1,16 @@
 #include "MFCMain.h"
 #include "resource.h"
-
+#include "Enums.h"
 
 BEGIN_MESSAGE_MAP(MFCMain, CWinApp)
 	ON_COMMAND(ID_FILE_QUIT,	&MFCMain::MenuFileQuit)
 	ON_COMMAND(ID_FILE_SAVETERRAIN, &MFCMain::MenuFileSaveTerrain)
 	ON_COMMAND(ID_EDIT_SELECT, &MFCMain::MenuEditSelect)
-	ON_COMMAND(ID_EDIT_UNDO, &MFCMain::MenuEditUndoRedo)
 	ON_COMMAND(ID_BUTTON40001,	&MFCMain::ToolBarButton1)
+	ON_COMMAND(ID_UNDO_BUTTON, &MFCMain::ToolBarButton2)
+	ON_COMMAND(ID_REDO_BUTTON, &MFCMain::ToolBarButton3)
+	ON_COMMAND(ID_GIZMO_BUTTON, &MFCMain::ToolBarButton4)
+	ON_COMMAND(ID_TERRAIN_BUTTON, &MFCMain::ToolBarButton5)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_TOOL, &CMyFrame::OnUpdatePage)
 END_MESSAGE_MAP()
 
@@ -42,8 +45,9 @@ BOOL MFCMain::InitInstance()
 	m_ToolSystem.SetMFCMain(this);
 
 	MenuEditGizmo();
+	MenuEditTerrain();
 
-
+	m_frame->m_toolBar.GetToolBarCtrl().EnableButton(ID_GIZMO_BUTTON, FALSE);
 	return TRUE;
 }
 
@@ -121,25 +125,41 @@ void MFCMain::MenuEditSelect()
 
 void MFCMain::MenuEditUndoRedo()
 {
-	//SelectDialogue m_ToolSelectDialogue(NULL, &m_ToolSystem.m_sceneGraph);		//create our dialoguebox //modal constructor
-	//m_ToolSelectDialogue.DoModal();	// start it up modal
-
-	//modeless dialogue must be declared in the class.   If we do local it will go out of scope instantly and destroy itself
-	m_ToolUndoRedoDialogue.Create(IDD_UNDOREDO);	//Start up modeless
-	m_ToolUndoRedoDialogue.ShowWindow(SW_SHOW);	//show modeless
-	m_ToolUndoRedoDialogue.SetObjectData(&m_ToolSystem.m_sceneGraph, &m_ToolSystem.m_selectedObject);
 }
 
 void MFCMain::ToolBarButton1()
 {
-	
+	m_ToolSystem.onActionSaveTerrain();
 	m_ToolSystem.onActionSave();
 }
 
-void MFCMain::ToolBarButton2() {
-
+void MFCMain::ToolBarButton2()
+{
+	m_ToolSystem.UndoFunction();
 }
 
+void MFCMain::ToolBarButton3()
+{
+	m_ToolSystem.RedoFunction();
+}
+
+void MFCMain::ToolBarButton4()
+{
+	m_ToolSystem.SetToolState(ToolState::GIZMO);
+	m_frame->m_toolBar.GetToolBarCtrl().EnableButton(ID_GIZMO_BUTTON, FALSE);
+	m_frame->m_toolBar.GetToolBarCtrl().EnableButton(ID_TERRAIN_BUTTON, TRUE);
+	m_GizmoDialogue.ShowWindow(SW_SHOW);
+	m_TerrainDialogue.ShowWindow(SW_HIDE);
+}
+
+void MFCMain::ToolBarButton5()
+{
+	m_ToolSystem.SetToolState(ToolState::TERRAIN);
+	m_frame->m_toolBar.GetToolBarCtrl().EnableButton(ID_GIZMO_BUTTON, TRUE);
+	m_frame->m_toolBar.GetToolBarCtrl().EnableButton(ID_TERRAIN_BUTTON, FALSE);
+	m_GizmoDialogue.ShowWindow(SW_HIDE);
+	m_TerrainDialogue.ShowWindow(SW_SHOW);
+}
 
 MFCMain::MFCMain()
 {
@@ -151,8 +171,7 @@ MFCMain::~MFCMain()
 }
 
 void MFCMain::MenuEditGizmo()
-{
-	// Get the placeholder control (CWnd)
+{   
 	CWnd* pPlaceholder = m_frame->GetDlgItem(IDC_SELECT_DIALOG_PLACEHOLDER);
 
 	if (pPlaceholder) {
@@ -179,5 +198,36 @@ void MFCMain::MenuEditGizmo()
 
 		// Show the dialog
 		m_GizmoDialogue.ShowWindow(SW_SHOW);
+	}
+}
+
+void MFCMain::MenuEditTerrain()
+{
+	CWnd* pPlaceholder = m_frame->GetDlgItem(IDC_SELECT_DIALOG_PLACEHOLDER);
+
+	if (pPlaceholder) {
+		// If the dialog hasn't already been created, create it
+		if (!::IsWindow(m_TerrainDialogue.GetSafeHwnd())) {
+			m_TerrainDialogue.Create(IDD_TERRAINDIALOGUE, pPlaceholder);
+		}
+
+		// Modify the extended style of the dialog to remove borders and title bar
+		m_TerrainDialogue.ModifyStyle(WS_CAPTION | WS_SYSMENU | WS_BORDER, 0, SWP_FRAMECHANGED);
+		m_TerrainDialogue.ModifyStyleEx(WS_EX_DLGMODALFRAME, 0, SWP_FRAMECHANGED);
+
+
+		// Get the client rectangle of the placeholder
+		CRect rect;
+		pPlaceholder->GetClientRect(&rect);
+
+		m_TerrainDialogue.SetParent(pPlaceholder);
+
+		// Move and resize the dialog to fit inside the placeholder
+		m_TerrainDialogue.MoveWindow(&rect);
+
+
+
+		// Show the dialog
+		m_TerrainDialogue.ShowWindow(SW_HIDE);
 	}
 }

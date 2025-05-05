@@ -1,4 +1,4 @@
-#include "MFCFrame.h"
+﻿#include "MFCFrame.h"
 #include "resource.h"
 
 
@@ -42,12 +42,13 @@ int CMyFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1) return -1;
 	
 	// create a view to occupy the client area of the frame //This is where DirectX is rendered
-	if (!m_DirXView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 0, 800, 600), this, NULL))
+	if (!m_DirXView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 25, 800, 600), this, NULL))
 	{
 		TRACE0("Failed to create view window\n");
 		return -1;
 	}
 	//m_DirXView.ShowWindow(SW_HIDE);
+
 
 	m_menu1.LoadMenuW(IDR_MENU1);
 	SetMenu(&m_menu1);
@@ -58,6 +59,7 @@ int CMyFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create toolbar\n");
 		return -1;      // fail to create
 	}
+
 
 	CRect rect;
 	GetClientRect(&rect);

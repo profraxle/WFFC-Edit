@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "GizmoDialogue.h"
-
+#include "Enums.h"
 // GizmoDialogue dialog
 
 IMPLEMENT_DYNAMIC(GizmoDialogue, CDialogEx)
@@ -11,7 +11,15 @@ IMPLEMENT_DYNAMIC(GizmoDialogue, CDialogEx)
 //Message map.  Just like MFCMAIN.cpp.  This is where we catch button presses etc and point them to a handy dandy method.
 BEGIN_MESSAGE_MAP(GizmoDialogue, CDialogEx)
 	ON_COMMAND(IDOK, &GizmoDialogue::End)					//ok button
-	ON_EN_CHANGE(IDC_YPOS, &GizmoDialogue::OnEnChangeYpos)
+	ON_EN_KILLFOCUS(IDC_XPOS,&GizmoDialogue::OnEnKillfocusXPos)
+	ON_EN_KILLFOCUS(IDC_YPOS, &GizmoDialogue::OnEnKillfocusYPos)
+	ON_EN_KILLFOCUS(IDC_ZPOS, &GizmoDialogue::OnEnKillfocusZPos)
+	ON_EN_KILLFOCUS(IDC_YAW, &GizmoDialogue::OnEnKillfocusYaw)
+	ON_EN_KILLFOCUS(IDC_PITCH, &GizmoDialogue::OnEnKillfocusPitch)
+	ON_EN_KILLFOCUS(IDC_ROLL, &GizmoDialogue::OnEnKillfocusRoll)
+	ON_WM_LBUTTONDOWN()
+	ON_BN_CLICKED(IDC_TRANSLATE, &GizmoDialogue::OnBnClickedTranslate)
+	ON_BN_CLICKED(IDC_ROTATE, &GizmoDialogue::OnBnClickedRotate)
 END_MESSAGE_MAP()
 
 
@@ -73,11 +81,53 @@ BOOL GizmoDialogue::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
+	GetDlgItem(IDC_TRANSLATE)->EnableWindow(FALSE);
 
-	CWnd* pEdit = GetDlgItem(IDC_XPOS);
-	if (pEdit)
+	bool updateFlags = true;
+
+	CWnd* pEdit1 = GetDlgItem(IDC_XPOS);
+	CWnd* pEdit2 = GetDlgItem(IDC_YPOS);
+	CWnd* pEdit3 = GetDlgItem(IDC_ZPOS);
+	CWnd* pEdit4 = GetDlgItem(IDC_PITCH);
+	CWnd* pEdit5 = GetDlgItem(IDC_YAW);
+	CWnd* pEdit6 = GetDlgItem(IDC_ROLL);
+
+	if (pEdit1)
 	{
-		pEdit->SetWindowTextW(L"My default text here");
+
+		pEdit1->SetWindowTextW(L"0.00");
+	}
+
+	if (pEdit2)
+	{
+
+
+		pEdit2->SetWindowTextW(L"0.00");
+	}
+
+	if (pEdit3)
+	{
+
+
+		pEdit3->SetWindowTextW(L"0.00");
+	}
+
+	if (pEdit4)
+	{
+
+		pEdit4->SetWindowTextW(L"0.00");
+	}
+
+	if (pEdit5)
+	{
+
+		pEdit5->SetWindowTextW(L"0.00");
+	}
+
+	if (pEdit6)
+	{
+
+		pEdit6->SetWindowTextW(L"0.00");
 	}
 
 
@@ -109,25 +159,24 @@ void GizmoDialogue::OnBnClickedOk()
 
 
 
-void GizmoDialogue::OnEnChangeYpos()
+void GizmoDialogue::ChangeSelectedObject(float x, float y, float z, float pitch, float yaw, float roll, int ID)
 {
-	// TODO:  If this is a RICHEDIT control, the control will not
-	// send this notification unless you override the CDialogEx::OnInitDialog()
-	// function and call CRichEditCtrl().SetEventMask()
-	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
-}
-
-void GizmoDialogue::ChangeSelectedObject(float x, float y, float z, float pitch, float yaw, float roll)
-{
-	
+	updateFlags = false;
 	CWnd* pEdit1 = GetDlgItem(IDC_XPOS);
 	CWnd* pEdit2 = GetDlgItem(IDC_YPOS);
 	CWnd* pEdit3 = GetDlgItem(IDC_ZPOS);
 	CWnd* pEdit4 = GetDlgItem(IDC_PITCH);
 	CWnd* pEdit5 = GetDlgItem(IDC_YAW);
 	CWnd* pEdit6 = GetDlgItem(IDC_ROLL);
+	CWnd* pEditFrame = GetDlgItem(IDC_PROPFRAME);
+
+	nX = x;
+	nY = y;
+	nZ = z;
+
+	nPitch = pitch;
+	nYaw = yaw;
+	nRoll = roll;
 
 	if (pEdit1)
 	{
@@ -177,4 +226,82 @@ void GizmoDialogue::ChangeSelectedObject(float x, float y, float z, float pitch,
 		pEdit6->SetWindowTextW(str);;
 	}
 
+	if (pEditFrame)
+	{
+		CString str;
+		str.Format(L"Object %i Properties",ID);  // Format float to string with 3 decimal places
+
+		pEditFrame->SetWindowTextW(str);;
+	}
+	updateFlags = true;
+}
+void GizmoDialogue::OnEnKillfocusXPos()
+{
+	OnKillFocus(IDC_XPOS, nX);
+}
+void GizmoDialogue::OnEnKillfocusYPos()
+{
+	OnKillFocus(IDC_YPOS, nY);
+}
+void GizmoDialogue::OnEnKillfocusZPos()
+{
+	OnKillFocus(IDC_ZPOS, nZ);
+}
+
+void GizmoDialogue::OnEnKillfocusYaw()
+{
+	OnKillFocus(IDC_YAW, nYaw);
+}
+void GizmoDialogue::OnEnKillfocusPitch()
+{
+	OnKillFocus(IDC_PITCH, nPitch);
+}
+void GizmoDialogue::OnEnKillfocusRoll()
+{
+	OnKillFocus(IDC_ROLL, nRoll);
+}
+
+
+
+void GizmoDialogue::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// Set focus to the dialog itself (removes focus from edit boxes)
+	SetFocus();
+
+	CDialogEx::OnLButtonDown(nFlags, point);
+}
+
+void GizmoDialogue::OnKillFocus(UINT ctrlID, float& store)
+{
+
+	if (!updateFlags) {
+		return;
+	}
+
+	CString str;
+	CWnd* pEdit = GetDlgItem(ctrlID);
+	pEdit->GetWindowText(str);
+
+	store = _wtoi(str);
+
+	valueUpdated = true;
+}
+
+
+void GizmoDialogue::OnBnClickedTranslate()
+{
+	valueUpdated = true;
+	gizmoState = GizmoState::TRANSLATE;
+
+	GetDlgItem(IDC_TRANSLATE)->EnableWindow(FALSE);
+	GetDlgItem(IDC_ROTATE)->EnableWindow(TRUE);
+}
+
+void GizmoDialogue::OnBnClickedRotate()
+{
+	valueUpdated = true;
+	gizmoState = GizmoState::ROTATE;
+
+	GetDlgItem(IDC_TRANSLATE)->EnableWindow(TRUE);
+	GetDlgItem(IDC_ROTATE)->EnableWindow(FALSE);
 }

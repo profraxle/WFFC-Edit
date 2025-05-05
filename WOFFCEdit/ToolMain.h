@@ -51,7 +51,7 @@ public:	//variables
 
 	SceneObject copyObject;
 
-	bool pasteTrigger, undoTrigger,redoTrigger;
+	bool pasteTrigger, undoTrigger,redoTrigger, saveTrigger;
 
 	std::stack < Command> history;
 	void UpdateHistory();
@@ -61,6 +61,9 @@ public:	//variables
 
 	void HandleGizmos();
 	void HandleTerrain();
+
+	void UndoFunction();
+	void RedoFunction();
 
 	bool isInGame;
 
@@ -81,12 +84,13 @@ private:	//variables
 	int m_height;
 	int m_currentChunk;			//the current chunk of thedatabase that we are operating on.  Dictates loading and saving. 
 	
+	bool terrainActionDone;
 
 	MFCMain * m_MFCMain;
 
 
 public:
 	void SetMFCMain(MFCMain* n_MFCMain);
-	
+	void SetToolState(int state);
 };
 

@@ -4,6 +4,7 @@ C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DeviceResources.cp
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayChunk.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\DisplayChunk.obj
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\DisplayObject.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\DisplayObject.obj
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Game.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\Game.obj
+C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\GizmoDialogue.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\GizmoDialogue.obj
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\Main.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\Main.obj
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\MFCFrame.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\MFCFrame.obj
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\MFCRenderFrame.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\MFCRenderFrame.obj
@@ -12,5 +13,5 @@ C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\MFCMain.cpp;C:\Use
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\SceneObject.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\SceneObject.obj
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\SelectDialogue.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\SelectDialogue.obj
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\sqlite3.c;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\sqlite3.obj
+C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\TerrainDialogue.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\TerrainDialogue.obj
 C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\ToolMain.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\ToolMain.obj
-C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\UndoRedoDialogue.cpp;C:\Users\frase\Documents\_Honours\Project\WFFC-Edit\WOFFCEdit\WoFEdit\x64\Debug\UndoRedoDialogue.obj

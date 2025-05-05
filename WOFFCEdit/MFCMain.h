@@ -9,8 +9,8 @@
 #include "resource.h"
 #include "MFCFrame.h"
 #include "SelectDialogue.h"
-#include "UndoRedoDialogue.h"
 #include "GizmoDialogue.h"
+#include "TerrainDialogue.h"
 
 
 class MFCMain : public CWinApp 
@@ -23,7 +23,10 @@ public:
 
 	CMyFrame* m_frame;
 	GizmoDialogue m_GizmoDialogue;
+	TerrainDialogue m_TerrainDialogue;
 
+	afx_msg void ToolBarButton4();
+	afx_msg void ToolBarButton5();
 
 private:
 
@@ -33,8 +36,6 @@ private:
 	CRect WindowRECT;	//Window area rectangle. 
 	SelectDialogue m_ToolSelectDialogue;			//for modeless dialogue, declare it here
 
-
-	UndoRedoDialogue m_ToolUndoRedoDialogue;
 
 	int m_width;		
 	int m_height;
@@ -46,7 +47,10 @@ private:
 	afx_msg void MenuEditUndoRedo();
 	afx_msg	void ToolBarButton1();
 	afx_msg void ToolBarButton2();
+	afx_msg void ToolBarButton3();
+
 	afx_msg void MenuEditGizmo();
+	afx_msg void MenuEditTerrain();
 
 
 	DECLARE_MESSAGE_MAP()	// required macro for message map functionality  One per class

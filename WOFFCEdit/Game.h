@@ -92,12 +92,16 @@ public:
 	void SetToolState(int nToolState);
 
 	void GetHeightmap(BYTE* outMap);
+	void SetHeightmap(BYTE* inMap);
 
 	bool IsMouseInGame();
 
 #ifdef DXTK_AUDIO
 	void NewAudioDevice();
 #endif
+
+	bool m_changeRadius;
+	float m_terrainRadius;
 
 private:
 
@@ -156,7 +160,7 @@ private:
 
 
 	DirectX::XMVECTOR m_terrainCoords;
-	float m_terrainRadius;
+
 
 
 

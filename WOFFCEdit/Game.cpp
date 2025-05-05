@@ -59,6 +59,8 @@ Game::Game()
 	m_SelectedIndex = 0;
 
 	m_terrainRadius = 10.f;
+
+	m_changeRadius = false;
 }
 
 Game::~Game()
@@ -224,6 +226,8 @@ void Game::Update(DX::StepTimer const& timer)
 
 				m_terrainRadius = std::clamp(m_terrainRadius, 1.f, 50.0f);
 				m_mouse->ResetScrollWheelValue();
+
+				m_changeRadius = true;
 			}
 
 
@@ -301,11 +305,7 @@ void Game::Render()
 		DrawGrid(xaxis, yaxis, g_XMZero, 512, 512, Colors::Gray);
 	}
 	//CAMERA POSITION ON HUD
-	m_sprites->Begin();
-	WCHAR   Buffer[256];
-	std::wstring var = L"Cam X: " + std::to_wstring(mouseState.x) + L"Cam Z: " + std::to_wstring(mouseState.y);
-	m_font->DrawString(m_sprites.get(), var.c_str() , XMFLOAT2(100, 10), Colors::Yellow);
-	m_sprites->End();
+
 
 	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -418,10 +418,16 @@ void Game::Render()
 		break;
 	}
 
-	
-
 
 	m_deviceResources->PIXEndEvent();
+
+
+	//draw camera location
+	m_sprites->Begin();
+	WCHAR   Buffer[256];
+	std::wstring var = L"Cam X: " + std::to_wstring(mouseState.x) + L"Cam Z: " + std::to_wstring(mouseState.y);
+	m_font->DrawString(m_sprites.get(), var.c_str(), XMFLOAT2(100, 10), Colors::Yellow);
+	m_sprites->End();
 
     m_deviceResources->Present();
 }
@@ -1278,6 +1284,12 @@ void Game::SetToolState(int nToolState)
 void Game::GetHeightmap(BYTE* outMap) {
 	std::memcpy(outMap, m_displayChunk.m_heightMap, sizeof(m_displayChunk.m_heightMap));
 
+}
+
+void Game::SetHeightmap(BYTE* inMap)
+{
+	memcpy(m_displayChunk.m_heightMap, inMap, sizeof(m_displayChunk.m_heightMap));
+	m_displayChunk.UpdateTerrain();
 }
 
 bool Game::IsMouseInGame() {
