@@ -735,6 +735,7 @@ void ToolMain::HandleGizmos() {
 			break;
 		}
 
+		//quick and dirty check to see if the point exists
 		if (DirectX::XMVectorGetX(point1) != 0 && DirectX::XMVectorGetY(point1) != 0, DirectX::XMVectorGetZ(point1) != 0) {
 			if (DirectX::XMVectorGetX(point2) != 0 && DirectX::XMVectorGetY(point2) != 0, DirectX::XMVectorGetZ(point2) != 0) {
 				DirectX::XMVECTOR diff = DirectX::XMVectorSubtract(point2, point1);
