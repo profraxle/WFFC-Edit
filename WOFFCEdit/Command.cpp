@@ -1,6 +1,6 @@
 #include "Command.h"
 
-
+//create new command
 Command::Command(std::vector<SceneObject> graph, int selected, BYTE heightMap[TERRAINRESOLUTION * TERRAINRESOLUTION]) {
 
 	sceneGraph = graph;

@@ -158,7 +158,7 @@ void Game::Update(DX::StepTimer const& timer)
 	 mouseState = m_mouse->GetState();
 
 
-
+	//when right mouse is down, look around
 	if (mouseState.rightButton) 
 	{
 		Vector2 diff = mousePos - Vector2(mouseState.x, mouseState.y);
@@ -166,6 +166,7 @@ void Game::Update(DX::StepTimer const& timer)
 		m_camOrientation.y -= diff.x;
 		m_camOrientation.x += diff.y;
 
+		//change movespeed based on the scroll wheel value
 		if (mouseState.scrollWheelValue != 0) {
 
 			m_movespeed += mouseState.scrollWheelValue / 120.f;
@@ -177,6 +178,7 @@ void Game::Update(DX::StepTimer const& timer)
 	}
 	mousePos = Vector2(mouseState.x, mouseState.y);
 
+	//clamp the camera orientation to prevent flipping
 	if (m_camOrientation.x >= 90)
 	{
 		m_camOrientation.x = 90;
@@ -213,6 +215,7 @@ void Game::Update(DX::StepTimer const& timer)
 		m_camPosition -= m_camRight*m_movespeed;
 	}
 
+	//handle different things on tick based on which tool is being used
 	switch (m_toolState) {
 	case ToolState::GIZMO:
 		break;
@@ -220,6 +223,7 @@ void Game::Update(DX::StepTimer const& timer)
 
 		if (!mouseState.rightButton)
 		{
+			//change radius of the terrain tool based on the scroll wheel value
 			if (mouseState.scrollWheelValue != 0) {
 
 				m_terrainRadius += mouseState.scrollWheelValue / 120.f;
@@ -237,9 +241,6 @@ void Game::Update(DX::StepTimer const& timer)
 	}
 
 	
-
-
-
 
 	//update lookat point
 	m_camLookAt = m_camPosition + m_camLookDirection;
@@ -357,12 +358,13 @@ void Game::Render()
 	{
 	case ToolState::TERRAIN:
 		
+		//draw the terrain tool
 		DrawCircle(m_terrainCoords, m_terrainRadius, 64);
 		break;
 	case ToolState::GIZMO:
 
 		context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-		//render gizmo if selected object
+		//render gizmo if selected object, disabling depth so its always on top
 		if (m_SelectedIndex != -1) {
 			m_deviceResources->PIXBeginEvent(L"Draw model");
 			const XMVECTORF32 scale = { 4, 4, 4 };
@@ -617,6 +619,7 @@ void Game::BuildDisplayList(std::vector<SceneObject> * SceneGraph)
 		
 }
 
+//update the positions of the displayed items
 void Game::UpdateDisplayList(std::vector<SceneObject>* SceneGraph)
 {
 	auto device = m_deviceResources->GetD3DDevice();
@@ -860,6 +863,7 @@ int Game::MouseInteractGizmo() {
 
 	float minDistance = 9999999;
 
+	//get which indices correspond to which gizmo
 	int max = 0;
 	int min = 3;
 
@@ -940,6 +944,7 @@ int Game::MouseInteractGizmo() {
 			XMVECTOR pickingVector = farPoint - nearPoint;
 			pickingVector = XMVector3Normalize(pickingVector);
 
+			//iterate through gizmo meshes and get the nearest one intersecting the ray
 			for (int y = 0; y < m_gizmoModels[m_gizmoState][i].get()->meshes.size(); y++) {
 				if (m_gizmoModels[m_gizmoState][i].get()->meshes[y]->boundingBox.Intersects(nearPoint, pickingVector, pickedDistance)) {
 
@@ -956,6 +961,7 @@ int Game::MouseInteractGizmo() {
 	return selectedID;
 }
 
+//convert screen coordinates to a ray in 3D space, used for the more advances mouse mechanics
 void Game::ScreenPointToRay(float x, float y, XMMATRIX& view, XMMATRIX& proj, float screenWidth, float screenHeight, XMVECTOR& outOrigin, XMVECTOR& outDir)
 {
 	XMVECTOR nearPoint = XMVector3Unproject(
@@ -973,6 +979,7 @@ void Game::ScreenPointToRay(float x, float y, XMMATRIX& view, XMMATRIX& proj, fl
 	outDir = XMVector3Normalize(XMVectorSubtract(farPoint, nearPoint));
 }
 
+//get the closest point to the mouse on an axis that the selected object is being dragged along
 XMVECTOR Game::DragGizmo(XMVECTOR axisDir) 
 {
 	XMMATRIX viewM = m_view;
@@ -989,6 +996,7 @@ XMVECTOR Game::DragGizmo(XMVECTOR axisDir)
 	return clickPoint;
 }
 
+//get the closest point to the mouse on a plane that has a normal which is axis of rotation
 XMVECTOR Game::DragRotGizmo(XMVECTOR rotateAxis) {
 
 	XMMATRIX viewM = m_view;
@@ -1040,6 +1048,7 @@ XMVECTOR Game::ClosestPointBetweenLines(XMVECTOR point1, XMVECTOR dir1, XMVECTOR
 	return XMVectorMultiplyAdd(dir1, XMVectorReplicate(t), point1);
 }
 
+//get the closest point on a plane to the mouse ray
 XMVECTOR Game::ClosestPointOnPlane(XMVECTOR point1, XMVECTOR dir, XMVECTOR planeOrigin, XMVECTOR planeNormal) 
 {
 	float denom = XMVectorGetX(XMVector3Dot(planeNormal, dir));
@@ -1052,6 +1061,7 @@ XMVECTOR Game::ClosestPointOnPlane(XMVECTOR point1, XMVECTOR dir, XMVECTOR plane
 	return point1 + t * dir;
 }
 
+//finf the angle between two points on a plane
 float Game::GetAngleDiff(XMVECTOR point1, XMVECTOR point2, XMVECTOR rotAxis) 
 {
 	XMVECTOR planeOrigin = XMVectorSet(m_displayList[m_SelectedIndex].m_position.x,
@@ -1108,6 +1118,7 @@ XMFLOAT3 Game::GetWorldPos(int x, int z, const BYTE* heightMap, float terrainSiz
 	return DirectX::XMFLOAT3(worldX, height, worldZ);
 }
 
+//do hit tests from mouse ray against triangles formed by the heightmap
 XMVECTOR Game::FindMouseOnTerrain()
 {
 	using namespace DirectX;
@@ -1126,6 +1137,8 @@ XMVECTOR Game::FindMouseOnTerrain()
 	float closestDist = FLT_MAX;
 	XMVECTOR closestHit = XMVectorZero();
 
+
+	//iterate through heightmap and create triangles from vertices, then test for intersection with the mouse ray
 	for (int z = 0; z < resolution - 1; ++z) {
 		for (int x = 0; x < resolution - 1; ++x) {
 
@@ -1157,6 +1170,8 @@ XMVECTOR Game::FindMouseOnTerrain()
 
 	return closestHit;
 }
+
+
 void Game::DrawCircle(DirectX::FXMVECTOR center, float radius, int segments)
 {
 	auto context = m_deviceResources->GetD3DDeviceContext();
@@ -1171,11 +1186,14 @@ void Game::DrawCircle(DirectX::FXMVECTOR center, float radius, int segments)
 	float terrainSize = m_displayChunk.m_terrainSize;
 	int terrainRes = TERRAINRESOLUTION;
 
+	//determine angle steps from segments specified
 	float angleStep = XM_2PI / segments;
 	Vector3 prevPoint;
 
 	for (int i = 0; i <= segments; ++i)
 	{
+
+		//use equation of a circle to find points on circle
 		float angle = i * angleStep;
 		float x = cx + radius * cosf(angle);
 		float z = cz + radius * sinf(angle);

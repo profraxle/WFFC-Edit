@@ -224,6 +224,7 @@ void DisplayChunk::RaiseTerrainHeightAroundPoint(const DirectX::XMVECTOR& center
 	float cx = XMVectorGetX(center);
 	float cz = XMVectorGetZ(center);
 
+	//iterate over thew heightmap and find the points within the radius of the center point
 	for (int z = 0; z < resolution; ++z)
 	{
 		for (int x = 0; x < resolution; ++x)
@@ -235,6 +236,7 @@ void DisplayChunk::RaiseTerrainHeightAroundPoint(const DirectX::XMVECTOR& center
 			float dx = worldX - cx;
 			float dz = worldZ - cz;
 
+			//if within the circle, add the delta with scaling factor to the heightmap at the index
 			if ((dx * dx + dz * dz) <= radius * radius)
 			{
 				int index = x + z * resolution;
@@ -251,7 +253,7 @@ void DisplayChunk::RaiseTerrainHeightAroundPoint(const DirectX::XMVECTOR& center
 void DisplayChunk::FlattenTerrainHeightAroundPoint(const DirectX::XMVECTOR& center, float radius)
 {
 
-
+	//get centre point in world space and store its height data
 	const int resolution = TERRAINRESOLUTION;
 
 	float cx = XMVectorGetX(center);
@@ -270,7 +272,7 @@ void DisplayChunk::FlattenTerrainHeightAroundPoint(const DirectX::XMVECTOR& cent
 	BYTE cHeight = m_heightMap[centreIndex];
 
 	
-
+	//apply stored height data to all indices within the circle
 	for (int z = 0; z < resolution; ++z)
 	{
 		for (int x = 0; x < resolution; ++x)
@@ -303,22 +305,12 @@ void DisplayChunk::SmoothTerrainHeightAroundPoint(const DirectX::XMVECTOR& cente
 
 	float cx = XMVectorGetX(center);
 	float cz = XMVectorGetZ(center);
-
-
-	int centerX = static_cast<int>((cx + m_terrainSize / 2.0f) / m_terrainPositionScalingFactor);
-	int centerZ = static_cast<int>((cz + m_terrainSize / 2.0f) / m_terrainPositionScalingFactor);
-
-	// Clamp to ensure it's within bounds
-	centerX = std::clamp(centerX, 0, resolution - 1);
-	centerZ = std::clamp(centerZ, 0, resolution - 1);
-
-	int centreIndex = centerX + centerZ * resolution;
-
 	
 	int count = 0;
 
 	float average = 0;
 
+	//average all height value within the circle
 	for (int z = 0; z < resolution; ++z)
 	{
 		for (int x = 0; x < resolution; ++x)
@@ -339,7 +331,7 @@ void DisplayChunk::SmoothTerrainHeightAroundPoint(const DirectX::XMVECTOR& cente
 	}
 
 	average /= count;
-	//average = static_cast<BYTE>(std::clamp(static_cast<int>(average), 0, 255));
+
 
 
 	for (int z = 0; z < resolution; ++z)
@@ -357,6 +349,7 @@ void DisplayChunk::SmoothTerrainHeightAroundPoint(const DirectX::XMVECTOR& cente
 			{
 				int index = x + z * resolution;
 
+				//move the heightmap values towards the average
 					if (m_heightMap[index] < average) {
 						if (m_heightMap[index] + static_cast<int>(0.25f / m_terrainHeightScale) < 255) {
 							m_heightMap[index] += static_cast<int>(0.25f / m_terrainHeightScale);

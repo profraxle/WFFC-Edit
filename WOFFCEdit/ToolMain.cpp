@@ -706,13 +706,12 @@ void ToolMain::HandleGizmos() {
 	
 	if (m_selectedGizmo != -1 && m_selectedObject != -1) {
 
-
-
+		//push the point back
 		point1 = point2;
 
+		//define axes
 		DirectX::XMVECTOR axis;
 		DirectX::XMVECTOR axis2;
-		DirectX::XMVECTOR quat = DirectX::XMQuaternionRotationRollPitchYaw(m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
 
 		if (m_selectedGizmo == 0) {
 			axis = DirectX::XMVectorSet(0, 1, 0, 0);
@@ -724,8 +723,12 @@ void ToolMain::HandleGizmos() {
 		if (m_selectedGizmo == 2) {
 			axis = DirectX::XMVectorSet(1, 0, 0, 0);
 		}
+
+		//rotate axis for local rotation
+		DirectX::XMVECTOR quat = DirectX::XMQuaternionRotationRollPitchYaw(m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ);
 		axis2 = DirectX::XMVector3Rotate(axis, quat);
 
+		//switch state of gizmo and call the drag functions
 		switch (m_gizmoState) {
 		case GizmoState::TRANSLATE:
 			point2 = m_d3dRenderer.DragGizmo(axis);
@@ -740,6 +743,7 @@ void ToolMain::HandleGizmos() {
 			if (DirectX::XMVectorGetX(point2) != 0 && DirectX::XMVectorGetY(point2) != 0, DirectX::XMVectorGetZ(point2) != 0) {
 				DirectX::XMVECTOR diff = DirectX::XMVectorSubtract(point2, point1);
 
+				//move the object based on whether its translation or rotation
 				switch (m_gizmoState) {
 
 				case GizmoState::TRANSLATE:
@@ -753,20 +757,10 @@ void ToolMain::HandleGizmos() {
 					if (m_selectedGizmo == 2) {
 						m_sceneGraph[m_selectedObject].posX += DirectX::XMVectorGetX(diff);
 					}
+
+					//callback into side panel
 					m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
 						m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ, m_selectedObject);
-					break;
-				case GizmoState::SCALE:
-					if (m_selectedGizmo == 0) {
-						m_sceneGraph[m_selectedObject].scaY += DirectX::XMVectorGetY(diff);
-					}
-					if (m_selectedGizmo == 1) {
-						m_sceneGraph[m_selectedObject].scaZ += DirectX::XMVectorGetZ(diff);
-
-					}
-					if (m_selectedGizmo == 2) {
-						m_sceneGraph[m_selectedObject].scaX -= DirectX::XMVectorGetX(diff);
-					}
 					break;
 				case GizmoState::ROTATE:
 
@@ -784,6 +778,8 @@ void ToolMain::HandleGizmos() {
 						if (m_selectedGizmo == 2) {
 							m_sceneGraph[m_selectedObject].rotX += angle;
 						}
+
+						//callback into side panel
 						m_MFCMain->m_GizmoDialogue.ChangeSelectedObject(m_sceneGraph[m_selectedObject].posX, m_sceneGraph[m_selectedObject].posY, m_sceneGraph[m_selectedObject].posZ,
 							m_sceneGraph[m_selectedObject].rotX, m_sceneGraph[m_selectedObject].rotY, m_sceneGraph[m_selectedObject].rotZ, m_selectedObject);
 					}
@@ -791,9 +787,7 @@ void ToolMain::HandleGizmos() {
 					break;
 				}
 
-
-
-
+				//update the rendered list
 				m_d3dRenderer.UpdateDisplayList(&m_sceneGraph);
 			}
 		}
@@ -803,11 +797,13 @@ void ToolMain::HandleGizmos() {
 
 void ToolMain::HandleTerrain() 
 {
+	//update the history
 	if (!terrainActionDone) {
 		UpdateHistory();
 		terrainActionDone= true;
 	}
 
+	//switch which tool is being used
 	switch (m_TerrainState) {
 	case TerrainState::RAISE:
 		m_d3dRenderer.TerrainRaiseLower(true);
@@ -825,28 +821,40 @@ void ToolMain::HandleTerrain()
 }
 
 void ToolMain::UndoFunction() {
+
 	if (!history.empty()) {
+
+		//push to future history
 		UpdateFutureHistory();
+
+		//restore data from the command
 		m_sceneGraph = history.top().sceneGraph;
 		m_selectedObject = history.top().selectedObject;
 		m_d3dRenderer.SetHeightmap(history.top().m_heightMap);
-
 		m_d3dRenderer.SetSelectedIndex(m_selectedObject);
 
+		//pop the history stack
 		history.pop();
+		
 
+		//rebuild the display list
 		m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
 		undoTrigger = false;
 	}
 }
 void ToolMain::RedoFunction() {
 	if (!futureHistory.empty()) {
+		//push to history
 		UpdateHistory();
+		//restore data from the command
 		m_sceneGraph = futureHistory.top().sceneGraph;
 		m_selectedObject = futureHistory.top().selectedObject;
-		futureHistory.pop();
 		m_d3dRenderer.SetSelectedIndex(m_selectedObject);
 
+		//pop the history stack
+		futureHistory.pop();
+		
+		//rebuild the display list
 		m_d3dRenderer.BuildDisplayList(&m_sceneGraph);
 		redoTrigger = false;
 	}

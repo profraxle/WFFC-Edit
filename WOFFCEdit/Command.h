@@ -2,6 +2,9 @@
 #include <vector>
 #include "SceneObject.h"
 #include "DisplayChunk.h"
+
+//Class to store state of the world at time of command
+
 class Command
 {
 

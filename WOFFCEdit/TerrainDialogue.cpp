@@ -95,6 +95,7 @@ void TerrainDialogue::OnEnKillFocusRadius()
 
 void TerrainDialogue::OnBnClickedRaiseterrain()
 {
+
 	valueUpdated = true;
 	storeState = TerrainState::RAISE;
 
